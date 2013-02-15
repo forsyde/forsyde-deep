@@ -6,8 +6,8 @@
 
 module SimpleDES_HW where
 
-import ForSyDe
-import ForSyDe.Bit
+import ForSyDe.Deep
+import ForSyDe.Deep.Bit
 import Data.Bits
 import Data.Int
 import Data.Param.FSVec 

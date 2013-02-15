@@ -4,7 +4,7 @@
 module DeepShallow where
 
 import SeqAddFour (addFourSys)
-import ForSyDe(simulate)
+import ForSyDe.Deep(simulate)
 import ForSyDe.Shallow
 import Data.Int
 

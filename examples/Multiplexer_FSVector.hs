@@ -2,7 +2,7 @@
 -- multiplexer
 module Multiplexer_FSVector where
 
-import ForSyDe
+import ForSyDe.Deep
 import Language.Haskell.TH.Lift
 import Data.Param.FSVec
 import Data.TypeLevel.Num.Reps

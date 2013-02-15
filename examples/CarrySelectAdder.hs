@@ -5,7 +5,7 @@
 
 module CarrySelectAdder where
 
-import ForSyDe     -- Definition of Bit data type
+import ForSyDe.Deep     -- Definition of Bit data type
 import Data.Bits   -- Operations for Bit data type
 import Data.Param.FSVec
 import Data.TypeLevel.Num.Reps
@@ -225,14 +225,23 @@ simCSAdd_1' = simFourBitCSAdder2 one a3 a2 a1 a0 a3 a2 a1 a0
 adder4BitFun :: ProcFun (Bit -> FSVec D4 Bit -> FSVec D4 Bit -> (Bit, FSVec D4 Bit))
 adder4BitFun = $(newProcFun [d|adder4BitFun :: Bit -> FSVec D4 Bit -> FSVec D4 Bit -> (Bit, FSVec D4 Bit)
                                adder4BitFun cin a b = (cout, sum) where
+                                  cout :: Bit
                                   cout = (a!d3 .&. b!d3) .|. (a!d3 .&. c2) .|. (b!d3 .&. c2)
+                                  c2 :: Bit
                                   c2 = (a!d2 .&. b!d2) .|. (a!d2 .&. c1) .|. (b!d2 .&. c1)
+                                  c1 :: Bit
                                   c1 = (a!d1 .&. b!d1) .|. (a!d1 .&. c0) .|. (b!d1 .&. c0)
+                                  c0 :: Bit
                                   c0 = (a!d0 .&. b!d0) .|. (a!d0 .&. cin) .|. (b!d0 .&. cin)
+                                  s3 :: Bit
                                   s3 = (a!d3 `xor` b!d3) `xor` c2
+                                  s2 :: Bit
                                   s2 = (a!d2 `xor` b!d2) `xor` c1
+                                  s1 :: Bit
                                   s1 = (a!d1 `xor` b!d1) `xor` c0
+                                  s0 :: Bit
                                   s0 = (a!d0 `xor` b!d0) `xor` cin
+                                  sum :: FSVec D4 Bit
                                   sum = s0 +> s1 +> s2 +> s3 +> empty |])
 
 adder4BitProc :: Signal Bit -> Signal (FSVec D4 Bit) -> Signal (FSVec D4 Bit) -> (Signal Bit, Signal (FSVec D4 Bit))
@@ -308,10 +317,10 @@ vhdlCSAdder4Bit = writeVHDL csAdder4BitSys
 csAdder16BitProc :: Signal (FSVec D16 Bit) -> Signal (FSVec D16 Bit) -> (Signal Bit, Signal (FSVec D16 Bit))
 csAdder16BitProc a b = (cout, sum) where
                        sum = zipWith4SY "concat4" concat4Fun sum3_0 sum7_4 sum11_8 sum15_12
-                       (cout, sum15_12) = (instantiate "csadder3" csAdder4BitSys) c11 a15_12 b15_12
+                       (cout, sum15_12) = (instantiate "csadder1" csAdder4BitSys) c11 a15_12 b15_12
                        (c11, sum11_8) = (instantiate "csadder2" csAdder4BitSys) c7 a11_8 b11_8
                        (c7, sum7_4) = (instantiate "csadder3" csAdder4BitSys) c3 a7_4 b7_4
-                       (c3, sum3_0) = (instantiate "csadder3" csAdder4BitSys) zero a3_0 b3_0
+                       (c3, sum3_0) = (instantiate "csadder4" csAdder4BitSys) zero a3_0 b3_0
                        a15_12 = mapSY "a15_12" select15_12Fun a
                        a11_8  = mapSY "a11_8"  select11_8Fun a
                        a7_4   = mapSY "a7_4"   select7_4Fun a

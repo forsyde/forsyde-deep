@@ -3,7 +3,7 @@
 -- Adds a signal to four signals
 module ParAddFour where
 
-import ForSyDe
+import ForSyDe.Deep
 import Data.Int
 
 

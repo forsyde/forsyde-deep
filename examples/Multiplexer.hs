@@ -2,7 +2,7 @@
 -- multiplexer
 module Multiplexer where
 
-import ForSyDe
+import ForSyDe.Deep
 import Language.Haskell.TH.Lift
 
 -- I used tuples, but a vector of bits is what I would like to have

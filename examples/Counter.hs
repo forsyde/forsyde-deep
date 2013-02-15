@@ -4,7 +4,7 @@
 
 module Counter where
 
-import ForSyDe
+import ForSyDe.Deep
 import Data.Int
 
 counter :: Signal Int32

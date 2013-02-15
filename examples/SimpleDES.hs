@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 -- The module implements a simplified version of the DES
 -- Encryption-Decryption Algorithm. The implementation is based on
 -- Stallings: Cryptography and Network Security 4/e, Pearson Education,
@@ -5,7 +6,7 @@
 
 module SimpleDES where
 
-import ForSyDe
+import ForSyDe.Deep
 import Data.Bits
 import Data.Param.FSVec
 import Data.TypeLevel.Num.Reps

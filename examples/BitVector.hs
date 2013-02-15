@@ -2,7 +2,7 @@
 -- example module to test bit conversion functions
 module BitVector where
 
-import ForSyDe
+import ForSyDe.Deep
 import Data.Int (Int32)
 import Data.Param.FSVec
 import Data.TypeLevel.Num (D32)

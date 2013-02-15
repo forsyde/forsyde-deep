@@ -5,7 +5,7 @@
 
 module Null where
 
-import ForSyDe
+import ForSyDe.Deep
 
 nullSysF :: ()
 nullSysF = ()

@@ -4,23 +4,23 @@
 -- Module      :  Language.Haskell.TH.TypeLib
 -- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
 -- License     :  BSD-style (see the file LICENSE)
--- 
+--
 -- Maintainer  :  forsyde-dev@ict.kth.se
 -- Stability   :  experimental
 -- Portability :  portable
 --
 -- This module provides basic functions related to Template-Haskell's 'Type'.
--- 
+--
 -----------------------------------------------------------------------------
-module Language.Haskell.TH.TypeLib 
+module Language.Haskell.TH.TypeLib
  (Context,
   mkContext,
   monoContext,
   isPoly,
   contextVarNames,
   contextConstraints,
-  mkForallT, 
-  unArrowT, 
+  mkForallT,
+  unArrowT,
   unAppT,
   (-->),
   reAppT,
@@ -29,7 +29,7 @@ module Language.Haskell.TH.TypeLib
   thTypeOf,
   typeRep2Type,
   tyCon2Type,
-  type2TypeRep) 
+  type2TypeRep)
  where
 
 import Data.Dynamic
@@ -45,10 +45,10 @@ import System.IO (Handle)
 import Data.IORef (IORef)
 import Foreign (Ptr, FunPtr, StablePtr, ForeignPtr)
 import Data.Array (Array)
-import Control.OldException (Exception, 
+import Control.OldException (Exception,
                           AsyncException,
-                          ArrayException, 
-                          ArithException, 
+                          ArrayException,
+                          ArithException,
                           IOException)
 import Data.Ratio (Ratio)
 import Control.Concurrent.MVar (MVar)
@@ -64,16 +64,16 @@ import Control.Concurrent.MVar (MVar)
 --  forall a b. (Show a, Show b) => (a,b)
 --  @
 --  is @forall a b. (Show a, Show b) =>@
---  where @a@ and @b@ are the the context variables and  
---  @(Show a, Show b)@ are the context constraints 
-data Context = Context 
-                   [TyVarBndr] -- Variable names 
+--  where @a@ and @b@ are the the context variables and
+--  @(Show a, Show b)@ are the context constraints
+data Context = Context
+                   [TyVarBndr] -- Variable names
                    Cxt         -- Constraints (the context itself)
 
 instance Show Context where
 -- FIXME: this is really ugly, refactor and improve its look
- showsPrec _ (Context tvb cxt) = 
-   showVars tvb . showConstraints cxt 
+ showsPrec _ (Context tvb cxt) =
+   showVars tvb . showConstraints cxt
    where showVars tvb = showForall (not (null tvb))  (showVars' tvb)
          showVars' ((PlainTV n):tvbs) = shows n . showChar ' ' . showVars' tvbs
          showVars' []   = id
@@ -81,10 +81,10 @@ instance Show Context where
                              showParen (length c > 1) (showConstraints' c) .
                              (\s -> if not (null c) then s ++ " =>" else s)
          showConstraints' [c]    = shows c
-         showConstraints' (c:cx) = showString (pprint c) . showString ", " . 
+         showConstraints' (c:cx) = showString (pprint c) . showString ", " .
                                    showConstraints' cx
          showConstraints' []    = id
-         showForall b s = if b then showString "forall " . s . showChar '.' 
+         showForall b s = if b then showString "forall " . s . showChar '.'
                                else s
 
 -- | 'Context' constructor
@@ -94,7 +94,7 @@ mkContext tvb c = Context tvb c
 -- | Empty context for monomorphic types
 monoContext :: Context
 monoContext = Context [] []
- 
+
 -- | Tells if the context corresponds to a polymorphic type
 isPoly :: Context -> Bool
 isPoly (Context [] _) = False
@@ -116,14 +116,14 @@ mkForallT (Context tvb cxt) t = ForallT tvb cxt t
 -- Functions to observe a 'Type'
 --------------------------------
 
--- | Obtains the arguments and return type of a given 'Type' 
+-- | Obtains the arguments and return type of a given 'Type'
 --   (normally a function)
 --   together with its 'Context' (non-empty if the type is polymorphic)
-unArrowT :: Type                    -- ^ Type to observe  
+unArrowT :: Type                    -- ^ Type to observe
         ->  ([Type], Type, Context) -- ^ (args 'Type', ret 'Type', 'Context')
-unArrowT (ForallT names cxt t) = let (args,ret) = unArrowT' t 
+unArrowT (ForallT names cxt t) = let (args,ret) = unArrowT' t
                                  in (args, ret, Context names cxt)
-unArrowT t = let (args,ret) = unArrowT' t 
+unArrowT t = let (args,ret) = unArrowT' t
              in (args, ret, Context [] [])
 
 -- unArrowT for non-Forall Types
@@ -141,7 +141,7 @@ unAppT (ForallT names cxt t) = let (cons, args)  = unAppT' t
 unAppT t = let (cons, args)  = unAppT' t
            in (cons, args, Context [] [])
 
--- unAppT for non-Forall Types 
+-- unAppT for non-Forall Types
 unAppT' :: Type -> (Type, [Type])
 unAppT' t = (first,rest)
   where first:rest = unAppT'ac [] t
@@ -166,8 +166,8 @@ arg --> ret = (ArrowT `AppT` arg) `AppT` ret
 reAppT :: (Type, [Type], Context)  -- ^ (Constructor, type arguments, context)
        -> Type                     -- ^ resulting 'Type'
 -- Polymorphic types
-reAppT (cons, args, cxt) | isPoly cxt = 
- mkForallT cxt (reAppT (cons, args, monoContext)) 
+reAppT (cons, args, cxt) | isPoly cxt =
+ mkForallT cxt (reAppT (cons, args, monoContext))
 -- Monomorphic types
 reAppT (cons, args, _) = foldl1 AppT (cons:args)
 
@@ -176,39 +176,39 @@ reAppT (cons, args, _) = foldl1 AppT (cons:args)
 reArrowT :: ([Type], Type, Context)  -- ^ (Constructor, type arguments, context)
            -> Type                   -- ^ resulting 'Type'
 -- Polymorphic types
-reArrowT (args, ret, cxt) | isPoly cxt = 
- mkForallT cxt (reArrowT (args, ret, monoContext)) 
+reArrowT (args, ret, cxt) | isPoly cxt =
+ mkForallT cxt (reArrowT (args, ret, monoContext))
 -- Monomorphic types
 reArrowT (args, ret, _) = foldr1 (-->) (args ++ [ret])
 
 -------------------------------------------------------------------
 -- Transforming Language.Haskell.TH.Type into Data.Typeable.TypeRep
-------------------------------------------------------------------- 
+-------------------------------------------------------------------
 
 -- | Translate monomorphic Template Haskell Types to TypeReps
 --   If the type os polymorhpic 'Nothing' will be returned
 type2TypeRep :: Type -> Maybe TypeRep
--- Note: In the case of constructors, we don't need to translate to a TyCon first 
+-- Note: In the case of constructors, we don't need to translate to a TyCon first
 -- because:
 --
--- mkTyConApp tCon [t1 .. tn] = mkTyConApp tCon [] `mkAppTy` t1 ... `mkAppTy` tn 
+-- mkTyConApp tCon [t1 .. tn] = mkTyConApp tCon [] `mkAppTy` t1 ... `mkAppTy` tn
 type2TypeRep (ForallT (_:_) _ _) = Nothing
 type2TypeRep (ForallT _ (_:_) _) = Nothing
 type2TypeRep (ForallT _ _ t) = type2TypeRep t
 type2TypeRep (VarT _) = Nothing
 -- Tuple tyCon strings don't correspond to hierarchical names. They are
--- simply sequences of commas plus paranthesis: e.g. 2-tuple "(,)"   3-tuple "(,,)" .... 
+-- simply sequences of commas plus paranthesis: e.g. 2-tuple "(,)"   3-tuple "(,,)" ....
 type2TypeRep (TupleT n) = Just $  strCon ('(':replicate (n-1) ','++")")
-type2TypeRep ArrowT = Just $ typeableCon (undefined :: () -> ()) 
+type2TypeRep ArrowT = Just $ typeableCon (undefined :: () -> ())
 type2TypeRep ListT = Just $ typeableCon (undefined :: [()])
 type2TypeRep (t1 `AppT` t2) = do
   tRep1 <- type2TypeRep t1
   tRep2 <- type2TypeRep t2
-  return $ tRep1 `mkAppTy` tRep2 
+  return $ tRep1 `mkAppTy` tRep2
 -- Constructors
 type2TypeRep (ConT name)
   -- There are certain TyCons whose string does not correspond
-  -- to the hierarchical name of the constructor (the instances generated 
+  -- to the hierarchical name of the constructor (the instances generated
   -- in Data.Typeable), we have to cover all those cases by hand
   -- See http://hackage.haskell.org/trac/ghc/ticket/1841 for details
   | isJust mSpecialTypeRep = mSpecialTypeRep
@@ -217,13 +217,13 @@ type2TypeRep (ConT name)
   -- General case
   | otherwise = Just $  strCon (show name)
  where (isTup, tupCons) =
-         case (show name =~ "^Data\\.Tuple\\.\\((,+)\\)$") 
+         case (show name =~ "^Data\\.Tuple\\.\\((,+)\\)$")
                :: (String, String, String, [String]) of
             -- it's a tuple, we get the commas subpart (,+)
             (_, _, _, [commas]) -> (True, commas)
             _ -> (False, "")
        mSpecialTypeRep = lookup name specialConTable
-       specialConTable = 
+       specialConTable =
            [(''()             , typeableCon (undefined :: ())             ),
             (''[]             , typeableCon (undefined :: [()])           ),
             (''Maybe          , typeableCon (undefined :: Maybe ())       ),
@@ -266,7 +266,7 @@ type2TypeRep (ConT name)
 
 -------------------------------------------------------------------
 -- Transforming Data.Typeable.TypeRep into Language.Haskell.TH.Type
--------------------------------------------------------------------  
+-------------------------------------------------------------------
 
 -- | Obtain the Template Haskel type of a dynamic object
 dynTHType :: Dynamic -> Type
@@ -280,10 +280,10 @@ thTypeOf = typeRep2Type . typeOf
 typeRep2Type :: TypeRep -> Type
 typeRep2Type rep = let (con, reps) = splitTyConApp rep
   in reAppT (tyCon2Type con, map typeRep2Type reps, monoContext)
- 
+
 -- | Gives the corresponding Template Haskell 'Type' of a 'TyCon'
 tyCon2Type :: TyCon -> Type
-tyCon2Type = tyConStr2Type . tyConString
+tyCon2Type = tyConStr2Type . tyConName
 
 
 ----------------------------
@@ -292,7 +292,7 @@ tyCon2Type = tyConStr2Type . tyConString
 
 -- | transfrom a Typeable type constructor to a Template Haskell Type
 tyConStr2Type :: String -> Type
--- NOTE: The tyCon strings of basic types are not qualified and buggy in 
+-- NOTE: The tyCon strings of basic types are not qualified and buggy in
 -- some cases.
 -- See http://hackage.haskell.org/trac/ghc/ticket/1841
 -- FIXME: update this function whenever the bug is fixed
@@ -301,16 +301,16 @@ tyConStr2Type :: String -> Type
 -- in addition global names contain a packagename which cannot be guessed from
 -- the type representation.
 tyConStr2Type "->" = ArrowT
-tyConStr2Type  tupStr | tupStr =~ "^,+$" = 
- ConT (mkName $ "Data.Tuple.(" ++ tupStr ++ ")")   
+tyConStr2Type  tupStr | tupStr =~ "^,+$" =
+ ConT (mkName $ "Data.Tuple.(" ++ tupStr ++ ")")
 tyConStr2Type str  = ConT $ mkName str
 
--- Get the type constructor corresponding to a String 
+-- Get the type constructor corresponding to a String
 -- in form of a type representation
 strCon :: String -> TypeRep
 strCon str = mkTyCon str `mkTyConApp` []
 
 -- Get the type constructor corresponding to a typeable value
--- in form of a type representation 
+-- in form of a type representation
 typeableCon :: Typeable a => a -> TypeRep
 typeableCon t = (typeRepTyCon . typeOf) t `mkTyConApp` []

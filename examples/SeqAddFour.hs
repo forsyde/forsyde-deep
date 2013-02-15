@@ -8,7 +8,7 @@
 
 module SeqAddFour where
 
-import ForSyDe
+import ForSyDe.Deep
 import Data.Int
 
 -- A process function which adds one to its input

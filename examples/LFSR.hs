@@ -7,9 +7,9 @@
 
 module LFSR where
 
-import ForSyDe     -- Definition of Bit data type
+import ForSyDe.Deep     -- Definition of Bit data type
 import Data.Bits   -- Operations for Bit data type
-import List
+import Data.List
 
 -- ********************
 --

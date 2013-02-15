@@ -17,7 +17,7 @@
  
 module ALU where
 
-import ForSyDe
+import ForSyDe.Deep
 import Data.Bits
 import Data.Param.FSVec
 import Data.TypeLevel.Num.Reps

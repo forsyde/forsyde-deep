@@ -14,7 +14,7 @@
 module ALU_Shallow where
 
 import ForSyDe.Shallow
-import ForSyDe.Bit
+import ForSyDe.Deep.Bit
 import Data.Bits
 import Data.Param.FSVec
 import Data.TypeLevel.Num.Reps

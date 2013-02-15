@@ -1,0 +1,126 @@
+name:           ForSyDe-Deep
+version:        0.2.0
+cabal-version:  >= 1.2
+build-type:     Custom
+license:        BSD3
+license-file:   LICENSE
+author:         ES group, KTH/ICT/ES
+copyright:      Copyright (c) 2003-2013 SAM group, KTH/ICT/ES
+maintainer:     forsyde-dev@ict.kth.se
+homepage:       http://forsyde.ict.kth.se/
+stability:      alpha
+synopsis:
+ ForSyDe's Haskell-embedded Domain Specific Language.
+description:
+ The ForSyDe (Formal System Design) methodology has been developed with the objective to move system design to a higher level of abstraction and to bridge the abstraction gap by transformational design refinement.
+
+ This library provides ForSyDe's implementation as a Haskell-embedded Domain Specific Language (DSL). For more information, please see ForSyDe's website: <http://www.ict.kth.se/forsyde/>.
+
+ This library provides the deep implementation of ForSyDe in Haskell.
+category:       Language, Hardware
+tested-with:    GHC==7.4.2
+data-files:     lib/forsyde.vhd
+-- In order to include all this files with sdist
+extra-source-files: LICENSE,
+                    README,
+                    INSTALL,
+                    examples/ALU.hs,
+                    examples/ALU_Shallow.hs,
+                    examples/BitVector.hs,
+                    examples/ButtonEncoder.hs,
+                    examples/CarrySelectAdder.hs,
+                    examples/Counter.hs,
+                    examples/DeepShallow.hs,
+                    examples/LFSR.hs,
+                    examples/Multiplexer.hs,
+                    examples/Multiplexer_FSVector.hs,
+                    examples/Null.hs,
+                    examples/ParAddFour.hs,
+                    examples/SeqAddFour.hs,
+                    examples/ZipTwist.hs,
+                    tests/Main.hs,
+                    tests/Install.hs,
+                    tests/properties/Main.hs,
+                    tests/properties/Shallow/SynchronousMoC.hs,
+                    tests/properties/Shallow.hs,
+                    tests/properties/VHDLBackend.hs,
+-- due to a bug in cabal 1.2, sdist does not include hs-boot files
+                    src/ForSyDe/Deep/Backend/VHDL/GlobalNameTable.hs-boot,
+                    src/ForSyDe/Deep/System/SysDef.hs-boot
+
+
+Library
+  build-depends:   type-level,
+                   parameterized-data >= 0.1.5,
+                   containers,
+                   base>=4 && <6,
+                   regex-posix,
+                   mtl,
+                   pretty,
+                   template-haskell,
+                   process,
+                   directory,
+                   filepath,
+                   old-time,
+                   random,
+                   array
+
+
+  hs-source-dirs:  src
+  exposed-modules: Language.Haskell.TH.Lift,
+                   Language.Haskell.TH.LiftInstances,
+                   ForSyDe.Deep,
+                   ForSyDe.Deep.Ids,
+                   ForSyDe.Deep.System,
+                   ForSyDe.Deep.AbsentExt,
+                   ForSyDe.Deep.Bit,
+                   ForSyDe.Deep.DFT,
+                   ForSyDe.Deep.FIR,
+                   ForSyDe.Deep.Signal,
+                   ForSyDe.Deep.Process,
+                   ForSyDe.Deep.Process.SynchProc,
+                   ForSyDe.Deep.Backend,
+                   ForSyDe.Deep.Backend.Simulate,
+                   ForSyDe.Deep.Backend.VHDL,
+                   ForSyDe.Deep.Backend.GraphML
+
+  other-modules:   Paths_ForSyDe_Deep,
+                   Language.Haskell.TH.TypeLib,
+                   Data.Typeable.TypeRepLib,
+                   Data.Traversable.GenericZipWith,
+                   ForSyDe.Deep.Config,
+                   ForSyDe.Deep.ForSyDeErr,
+                   ForSyDe.Deep.Netlist,
+                   ForSyDe.Deep.Netlist.Traverse,
+                   ForSyDe.Deep.OSharing,
+                   ForSyDe.Deep.OSharing.UDynamic,
+                   ForSyDe.Deep.System.SysFun,
+                   ForSyDe.Deep.System.SysFun.Instances,
+                   ForSyDe.Deep.System.SysDef,
+                   ForSyDe.Deep.System.Instantiate,
+                   ForSyDe.Deep.Process.ProcFun,
+                   ForSyDe.Deep.Process.ProcVal,
+                   ForSyDe.Deep.Process.ProcType,
+                   ForSyDe.Deep.Process.ProcType.Instances,
+                   ForSyDe.Deep.Backend.Ppr,
+                   ForSyDe.Deep.Backend.VHDL.GlobalNameTable,
+                   ForSyDe.Deep.Backend.VHDL.AST,
+                   ForSyDe.Deep.Backend.VHDL.Ppr,
+                   ForSyDe.Deep.Backend.VHDL.Constants,
+                   ForSyDe.Deep.Backend.VHDL.FileIO,
+                   ForSyDe.Deep.Backend.VHDL.Traverse,
+                   ForSyDe.Deep.Backend.VHDL.Traverse.VHDLM,
+                   ForSyDe.Deep.Backend.VHDL.Translate,
+                   ForSyDe.Deep.Backend.VHDL.Generate,
+                   ForSyDe.Deep.Backend.VHDL.TestBench,
+                   ForSyDe.Deep.Backend.VHDL.Quartus,
+                   ForSyDe.Deep.Backend.VHDL.Modelsim,
+                   ForSyDe.Deep.Backend.GraphML.AST,
+                   ForSyDe.Deep.Backend.GraphML.Ppr,
+                   ForSyDe.Deep.Backend.GraphML.FileIO,
+                   ForSyDe.Deep.Backend.GraphML.Traverse,
+                   ForSyDe.Deep.Backend.GraphML.Traverse.GraphMLM
+
+
+
+  ghc-options:	-Wall -fno-warn-name-shadowing -fno-warn-orphans

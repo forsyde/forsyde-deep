@@ -3,7 +3,7 @@
 -- processes
 module ZipTwist where
 
-import ForSyDe
+import ForSyDe.Deep
 import Data.Param.FSVec
 import Data.TypeLevel.Num.Reps
 import Data.Int
