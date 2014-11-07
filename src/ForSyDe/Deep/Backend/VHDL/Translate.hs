@@ -142,7 +142,7 @@ transUnzipNSY2Block vPid inSig outSigs outTRTypes = do
                    [1..length outSigs]
  -- Generate the port interface of the block
      nOuts = length outSigs
-     tupTyCon = mkTyCon $ '(':replicate (nOuts-1) ','++")"
+     tupTyCon = mkTyCon3 "ghc-prim" "GHC.Tuple" $ '(':replicate (nOuts-1) ','++")"
      inTRType = tupTyCon `mkTyConApp` outTRTypes
  outTMTypes <- mapM transTR2TM outTRTypes
  inTMType <- transTR2TM inTRType
