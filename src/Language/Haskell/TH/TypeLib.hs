@@ -32,6 +32,7 @@ module Language.Haskell.TH.TypeLib
   type2TypeRep)
  where
 
+import Data.Typeable.Internal
 import Data.Dynamic
 import Language.Haskell.TH (Type(..), Cxt, TyVarBndr(..), pprint, mkName)
 import Text.Regex.Posix ((=~))
@@ -309,7 +310,10 @@ tyConStr2Type str  = ConT $ mkName str
 -- Get the type constructor corresponding to a String
 -- in form of a type representation
 strCon :: String -> TypeRep
-strCon str = mkTyCon str `mkTyConApp` []
+strCon str = mkTyCon3 pkg mod name `mkTyConApp` []
+        where
+        (_, _, _, [pkg,mod,name]) = (str =~ "^(.+)\\.(.+)\\.(.+)$" ::(String, String, String, [String]))
+
 
 -- Get the type constructor corresponding to a typeable value
 -- in form of a type representation
