@@ -34,9 +34,9 @@ module Language.Haskell.TH.TypeLib
 
 import Data.Typeable.Internal
 import Data.Dynamic
-import Language.Haskell.TH (Type(..), Cxt, TyVarBndr(..), pprint, mkName)
+import Language.Haskell.TH (Type(..), Cxt, TyVarBndr(..), pprint, mkName, nameModule, nameBase)
 import Text.Regex.Posix ((=~))
-import Data.Maybe(isJust)
+import Data.Maybe(isJust, fromMaybe)
 
 -- Due to type translations
 import GHC.Exts (RealWorld)
@@ -310,9 +310,12 @@ tyConStr2Type str  = ConT $ mkName str
 -- Get the type constructor corresponding to a String
 -- in form of a type representation
 strCon :: String -> TypeRep
-strCon str = mkTyCon3 pkg mod name `mkTyConApp` []
+strCon str = mkTyCon3 pkg mod base `mkTyConApp` []
         where
-        (_, _, _, [pkg,mod,name]) = (str =~ "^(.+)\\.(.+)\\.(.+)$" ::(String, String, String, [String]))
+                name = mkName str
+                pkg  = ""
+                mod  = fromMaybe "" (nameModule name)
+                base = nameBase name
 
 
 -- Get the type constructor corresponding to a typeable value
