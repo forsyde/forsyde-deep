@@ -46,13 +46,26 @@ import Language.Haskell.TH.Syntax
   Lift(..),
   Pred,
   TyVarBndr,
-  Kind,
   FamFlavour,
   Pragma,
-  InlineSpec)
+  AnnLookup,
+  AnnTarget,
+  Fixity,
+  FixityDirection,
+  Inline,
+  Module,
+  ModuleInfo,
+  Phases,
+  Role,
+  RuleBndr,
+  RuleMatch,
+  TyLit,
+  TySynEqn
+  )
 
 import Data.Ratio (Ratio)
 import Data.Int (Int8, Int16, Int32, Int64)
+import GHC.Word (Word8)
 
 $(mapM deriveLift 
       [''Ratio,
@@ -75,10 +88,23 @@ $(mapM deriveLift
        ''Exp,
        ''Pred,
        ''TyVarBndr,
-       ''Kind,
        ''FamFlavour,
        ''Pragma,
-       ''InlineSpec])
+
+       ''AnnLookup,
+       ''AnnTarget,
+       ''Fixity,
+       ''FixityDirection,
+       ''Inline,
+       ''Module,
+       ''ModuleInfo,
+       ''Phases,
+       ''Role,
+       ''RuleBndr,
+       ''RuleMatch,
+       ''TyLit,
+       ''TySynEqn
+       ])
        
 instance Lift Int64 where
   lift x = return (LitE (IntegerL (fromIntegral x)))
@@ -91,6 +117,9 @@ instance Lift Int16 where
   lift x = return (LitE (IntegerL (fromIntegral x)))
 
 instance Lift Int8 where
+  lift x = return (LitE (IntegerL (fromIntegral x)))
+
+instance Lift Word8 where
   lift x = return (LitE (IntegerL (fromIntegral x)))
 
 
