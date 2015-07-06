@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell, PolyKinds #-}
+{-# OPTIONS_GHC -fcontext-stack=64 #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  ForSyDe.Deep.Process.ProcType
@@ -125,9 +126,9 @@ genTupInstances n = do
               noBindS [| return $(tupE $ map varE names) |] ] )
         readProcTypeD = funD 'readProcType
                              [clause []  (normalB readProcTypeExpr) []]
-        procTypeCxt = map (\vName -> return $ ClassP ''ProcType [VarT vName]) names ++
-                      map (\vName -> return $ ClassP ''Data [VarT vName]) names ++
-                      map (\vName -> return $ ClassP ''Lift [VarT vName]) names
+        procTypeCxt = map (\vName -> appT (conT ''ProcType) (varT vName)) names ++
+                      map (\vName -> appT (conT ''Data)     (varT vName)) names ++
+                      map (\vName -> appT (conT ''Lift)     (varT vName)) names
     instanceD (cxt procTypeCxt)
                      (conT ''ProcType `appT` tupType)
                      [getEnumsD, readProcTypeD]
@@ -162,7 +163,7 @@ genTupInstances n = do
                                       [toConstr $(varE a)] |]
        dataTypeOfD = funD 'dataTypeOf
                           [clause [varP a] (normalB dataTypeOfExpr) []]
-       dataCxt = map (\vName -> return $ ClassP ''Data [VarT vName]) names
+       dataCxt = map (\vName -> appT (conT ''Data) (varT vName)) names
    instanceD (cxt dataCxt)
              (conT ''Data `appT` tupType)
              [gfoldlD, gunfoldD, toConstrD, dataTypeOfD]
@@ -178,7 +179,7 @@ genTupInstances n = do
                      |]
        typeOfD = funD 'typeOf
                       [clause [wildP] (normalB typeOfExpr) []]
-       typeableCxt = map (\vName -> return $ ClassP ''Typeable [VarT vName]) names
+       typeableCxt = map (\vName -> appT (conT ''Typeable) (varT vName)) names
    instanceD (cxt typeableCxt)
              (conT ''Typeable `appT` tupType)
              [typeOfD]
@@ -188,7 +189,7 @@ genTupInstances n = do
            varE 'tupE `appE` listE (map (\n -> varE 'lift `appE` varE n) names)
        liftD = funD 'lift
                  [clause [tupP (map varP names)] (normalB liftExpr) []]
-       liftCxt = map (\vName -> return $ ClassP ''Lift [VarT vName]) names
+       liftCxt = map (\vName -> appT (conT ''Lift) (varT vName)) names
    instanceD (cxt liftCxt)
              (conT ''Lift `appT` tupType)
              [liftD]
