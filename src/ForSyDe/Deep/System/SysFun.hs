@@ -221,7 +221,7 @@ funOutInstances n = do
        where accumApp accumT vName =  
                        accumT `appT` (conT ''Signal `appT` varT vName)
  --    Create the ProcType context
-     procTypeCxt = map (\vName -> return $ appT (conT ''ProcType) (varT vName)) outNames
+     procTypeCxt = map (\vName -> appT (conT ''ProcType) (varT vName)) outNames
 
  --    Finally return the instance declaration
      sysFunIns = instanceD (cxt procTypeCxt) 
