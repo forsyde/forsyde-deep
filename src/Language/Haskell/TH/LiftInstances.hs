@@ -86,7 +86,6 @@ $(mapM deriveLift
        ''Type, 
        ''Dec, 
        ''Exp,
-       ''Pred,
        ''TyVarBndr,
        ''FamFlavour,
        ''Pragma,
