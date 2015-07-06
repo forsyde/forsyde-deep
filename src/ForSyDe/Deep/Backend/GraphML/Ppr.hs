@@ -150,7 +150,7 @@ instance PprOps YFilesMarkup  GraphMLEdge where
                   (text "<y:Path sx=\"" <> float edgeOrigX <> text "\" sy=\"" <> float edgeOrigY <> text "\" tx=\"" <> float edgeTargetX <> text "\" ty=\""<> float edgeTargetY <> text "\"/>" $+$
                    text "<y:LineStyle color=\"#000000\" type=\"line\" width=\"1.0\"/>" $+$
                    text "<y:Arrows source=\"none\" target=\"standard\"/>" $+$
-		   text "<y:BendStyle smoothed=\"false\"/>"
+                   text "<y:BendStyle smoothed=\"false\"/>"
                   ) $+$
                  text "</y:PolyLineEdge>") $+$
              text "</data>") $+$

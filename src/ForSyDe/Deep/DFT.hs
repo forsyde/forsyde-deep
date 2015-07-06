@@ -60,7 +60,7 @@ bigX v k = bigX' (V.genericLength v) (V.fromVector v) k
                            | odd k  = x0 - x1 * bigW 2 0
        bigX' l xs k = bigF_even + bigF_odd * bigW l k
            where bigF_even = bigX' halfl (evens xs) k
-	         bigF_odd  = bigX' halfl (odds xs) k
+                 bigF_odd  = bigX' halfl (odds xs) k
                  halfl = l `div` 2
 
 bigW :: Integer -> Integer -> Complex Double

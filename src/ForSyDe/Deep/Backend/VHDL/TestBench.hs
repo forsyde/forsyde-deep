@@ -182,7 +182,7 @@ genStimuliAssigns mCycles stimuli signals = do
        normalize max xss
          | any null xss || max == 0 = (replicate l [], 0)
          | otherwise = let (transres, acum) = normalize' max (transpose xss)
-      	      	       in (transpose transres, acum)
+                       in (transpose transres, acum)
         where l = length xss
               normalize' max (xs:xss)
                  | length xs == l && max /= 0 =

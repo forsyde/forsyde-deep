@@ -831,12 +831,12 @@ transExp2VHDL (LetE decs e) = do
 transExp2VHDL lamE@(LamE _ _) = expErr lamE  LambdaAbstraction
 transExp2VHDL condE@(CondE _ _ _) = expErr condE Conditional
 transExp2VHDL caseE@(CaseE _ _) = expErr caseE Case
-transExp2VHDL doE@(DoE _) = expErr doE Do	
+transExp2VHDL doE@(DoE _) = expErr doE Do
 transExp2VHDL compE@(CompE _) = expErr compE ListComprehension
-transExp2VHDL arithSeqE@(ArithSeqE _) = expErr arithSeqE ArithSeq	
-transExp2VHDL listE@(ListE _) = expErr listE List	
-transExp2VHDL sigE@(SigE _ _) = expErr sigE Signature	
-transExp2VHDL reConE@(RecConE _ _) = expErr reConE Record	
+transExp2VHDL arithSeqE@(ArithSeqE _) = expErr arithSeqE ArithSeq
+transExp2VHDL listE@(ListE _) = expErr listE List
+transExp2VHDL sigE@(SigE _ _) = expErr sigE Signature
+transExp2VHDL reConE@(RecConE _ _) = expErr reConE Record
 transExp2VHDL recUpE@(RecUpdE _ _) = expErr recUpE Record
 
 -- The rest of expressions are not valid in practice and thus, not supported
