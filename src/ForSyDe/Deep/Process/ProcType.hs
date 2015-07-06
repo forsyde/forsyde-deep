@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell, PolyKinds #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  ForSyDe.Deep.Process.ProcType
@@ -102,10 +102,10 @@ genTupInstances n = do
       accumApp accumT vName = accumT `appT` varT vName
   if n <= 7
      then sequence [genProcTypeIns outNames tupType]
-     else sequence [genTypeableIns outNames tupType,
-                    genDataIns outNames tupType]
-                    -- genLiftIns outNames tupType,
-                    --genProcTypeIns outNames tupType]
+     else sequence [--genTypeableIns outNames tupType,
+                    genDataIns outNames tupType,
+                    genLiftIns outNames tupType,
+                    genProcTypeIns outNames tupType]
 
  where
   undef t = sigE [| undefined |] (varT t)

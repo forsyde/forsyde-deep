@@ -124,3 +124,4 @@ Library
 
 
   ghc-options:	-Wall -fno-warn-name-shadowing -fno-warn-orphans
+  extensions:   DataKinds AutoDeriveTypeable
