@@ -19,9 +19,7 @@ module Data.Traversable.GenericZipWith
 
 
 import Data.Foldable
-import Data.Traversable
 import qualified Data.Traversable as T
-import Control.Applicative
 import Control.Monad.State 
 
 -- | The state contains the list of values obtained form the foldable container
