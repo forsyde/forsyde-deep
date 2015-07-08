@@ -5,12 +5,12 @@
 -- The following example is designed as tutorial example for the paper.
 --
 -- It implements a simple ALU, which has the following modes
---   HH: out <- a AND b 
---   HL: out <- a OR b 
+--   HH: out <- a AND b
+--   HL: out <- a OR b
 --   LH: (cout, out) <- ADD a b
 --   LL: out <- shiftl a 0
 --
- 
+
 module ALU_Shallow where
 
 import ForSyDe.Shallow
@@ -24,15 +24,15 @@ import Data.TypeLevel.Num.Aliases
 
 ----- AND - 4 Bit
 
-and4Bit :: Signal (FSVec D4 Bit) 
-        -> Signal (FSVec D4 Bit) 
+and4Bit :: Signal (FSVec D4 Bit)
         -> Signal (FSVec D4 Bit)
-and4Bit = zipWithSY (Data.Param.FSVec.zipWith (.&.)) 
+        -> Signal (FSVec D4 Bit)
+and4Bit = zipWithSY (Data.Param.FSVec.zipWith (.&.))
 
 ----- OR - 4 Bit
 
-or4Bit :: Signal (FSVec D4 Bit) 
-            -> Signal (FSVec D4 Bit) 
+or4Bit :: Signal (FSVec D4 Bit)
+            -> Signal (FSVec D4 Bit)
             -> Signal (FSVec D4 Bit)
 or4Bit =  zipWithSY (Data.Param.FSVec.zipWith (.|.))
 
@@ -40,32 +40,32 @@ or4Bit =  zipWithSY (Data.Param.FSVec.zipWith (.|.))
 
 
 
-lsl :: Signal (FSVec D4 Bit) -> Signal (FSVec D4 Bit) 
+lsl :: Signal (FSVec D4 Bit) -> Signal (FSVec D4 Bit)
 lsl = mapSY shiftl_L where
-         shiftl_L v = shiftl v L  
+         shiftl_L v = shiftl v L
 
 ----- Mux 4/1 (no use of FSVec as input, only for selection)
 
-mux41Fun :: FSVec D2 Bit 
-            -> FSVec D4 Bit  
-            -> FSVec D4 Bit  
-            -> FSVec D4 Bit  
-            -> FSVec D4 Bit  
+mux41Fun :: FSVec D2 Bit
+            -> FSVec D4 Bit
+            -> FSVec D4 Bit
+            -> FSVec D4 Bit
+            -> FSVec D4 Bit
             -> FSVec D4 Bit
 mux41Fun sel x3 x2 x1 x0 = if sel == H +> H +> empty then
                               x3
-                           else 
+                           else
                               if sel == H +> L +> empty then
                                  x2
                               else
-                                 if sel == L +> H +> empty then 
+                                 if sel == L +> H +> empty then
                                     x1
                                  else
                                     x0
-                         
 
-mux41 :: Signal (FSVec D2 Bit) -> Signal (FSVec D4 Bit) 
-          -> Signal (FSVec D4 Bit) -> Signal (FSVec D4 Bit)  
+
+mux41 :: Signal (FSVec D2 Bit) -> Signal (FSVec D4 Bit)
+          -> Signal (FSVec D4 Bit) -> Signal (FSVec D4 Bit)
           -> Signal (FSVec D4 Bit) -> Signal (FSVec D4 Bit)
 mux41 = zipWith5SY mux41Fun
 
@@ -85,27 +85,27 @@ convToFSVec4 x3 x2 x1 x0 = x3 +> x2 +> x1 +> x0 +> empty
 
 
 fourBitAdder :: Signal Bit   -- C_IN
-	     -> Signal Bit   -- A3
+             -> Signal Bit   -- A3
              -> Signal Bit   -- A2
              -> Signal Bit   -- A1
-	     -> Signal Bit   -- A0
+             -> Signal Bit   -- A0
              -> Signal Bit   -- B3
-	     -> Signal Bit   -- B2
-	     -> Signal Bit   -- B1
-	     -> Signal Bit   -- B0
-	     -> (Signal Bit, -- C_OUT
-	         Signal Bit, -- SUM3
-	         Signal Bit, -- SUM2
-	         Signal Bit, -- SUM1
-	         Signal Bit) -- SUM0
-fourBitAdder c_in a3 a2 a1 a0 b3 b2 b1 b0 
+             -> Signal Bit   -- B2
+             -> Signal Bit   -- B1
+             -> Signal Bit   -- B0
+             -> (Signal Bit, -- C_OUT
+                 Signal Bit, -- SUM3
+                 Signal Bit, -- SUM2
+                 Signal Bit, -- SUM1
+                 Signal Bit) -- SUM0
+fourBitAdder c_in a3 a2 a1 a0 b3 b2 b1 b0
                 = (c_out, sum3, sum2, sum1, sum0)
-		  where (c_out, sum3) = unzipSY $ zipWith3SY fullAdd a3 b3 c2
-		        (c2, sum2)    = unzipSY $ zipWith3SY fullAdd a2 b2 c1
-		        (c1, sum1)    = unzipSY $ zipWith3SY fullAdd a1 b1 c0
-		        (c0, sum0)    = unzipSY $ zipWith3SY fullAdd a0 b0 c_in
+                  where (c_out, sum3) = unzipSY $ zipWith3SY fullAdd a3 b3 c2
+                        (c2, sum2)    = unzipSY $ zipWith3SY fullAdd a2 b2 c1
+                        (c1, sum1)    = unzipSY $ zipWith3SY fullAdd a1 b1 c0
+                        (c0, sum0)    = unzipSY $ zipWith3SY fullAdd a0 b0 c_in
 
-fullAdd a b cin = (cout, sum) 
+fullAdd a b cin = (cout, sum)
                   where
                      cout = (a .&. b) .|. (a .&. cin) .|. (b .&. cin)
                      sum  = (a `xor` b) `xor` cin
@@ -117,14 +117,14 @@ add4FSVec :: Signal (FSVec D4 Bit)
 add4FSVec a b = (cout, sum)
                  where
                     (a3,a2,a1,a0) = unzip4SY $ mapSY convFromFSVec4 a
-                    (b3,b2,b1,b0) = unzip4SY $ mapSY convFromFSVec4 b 
-                    (cout, s3, s2, s1, s0) = fourBitAdder zero a3 a2 a1 a0 b3 b2 b1 b0                
+                    (b3,b2,b1,b0) = unzip4SY $ mapSY convFromFSVec4 b
+                    (cout, s3, s2, s1, s0) = fourBitAdder zero a3 a2 a1 a0 b3 b2 b1 b0
                     sum = zipWith4SY convToFSVec4 s3 s2 s1 s0
-                    zero = sourceSY id L         
+                    zero = sourceSY id L
 
 ----- ALU
 
-alu :: Signal(FSVec D2 Bit) 
+alu :: Signal(FSVec D2 Bit)
     -> Signal (FSVec D4 Bit)
     -> Signal (FSVec D4 Bit)
      ->  (Signal Bit, Signal (FSVec D4 Bit))
@@ -136,7 +136,7 @@ alu sel a b = (cout, out)
                   lslOut = lsl a
                   out = mux41 sel andOut orOut sum lslOut
 
-                  
+
 
 ----- Test-Inputs
 
@@ -169,7 +169,7 @@ x0 = signal [L,L,L,L]
 x1 = signal [H,H,H,H]
 
 -- Helper functions
-zipWith5SY :: (a -> b -> c -> d -> e -> f) 
+zipWith5SY :: (a -> b -> c -> d -> e -> f)
            -> Signal a
            -> Signal b
            -> Signal c
@@ -181,5 +181,5 @@ zipWith5SY _ _ NullS _ _ _ = NullS
 zipWith5SY _ _ _ NullS _ _ = NullS
 zipWith5SY _ _ _ _ NullS _ = NullS
 zipWith5SY _ _ _ _ _ NullS = NullS
-zipWith5SY f (a :- as) (b :- bs) (c :- cs)  (d :- ds) (e:-es) = 
+zipWith5SY f (a :- as) (b :- bs) (c :- cs)  (d :- ds) (e:-es) =
  f a b c d e :- zipWith5SY f as bs cs ds es
