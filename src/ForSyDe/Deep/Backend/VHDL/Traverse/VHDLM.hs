@@ -30,7 +30,7 @@ import qualified Data.Set as S (filter)
 import Data.Set (Set, union, empty, toList)
 import Control.Monad.State
 import Language.Haskell.TH (nameBase, nameModule, Name, Exp)
-import Data.Typeable (TypeRep,typeRepTyCon,tyConString,tyConName,tyConPackage,tyConModule,typeRepKey)
+import Data.Typeable (TypeRep,typeRepTyCon,tyConName,tyConPackage,tyConModule)
 
 -------------------------------------
 -- How does the VHDL Backend work? --
@@ -353,14 +353,18 @@ addStm sm = modify addFun
 lookupCustomType :: TypeRep -> VHDLM (Maybe SimpleName)
 lookupCustomType rep = do
  transTable <- gets (typeTable.global)
- --let res = lookup rep transTable
+ let res = lookup rep transTable
+ return res
  --when (res==Nothing) $ mapM_ (\(elem,_) -> liftIO $ putStrLn $ (tyConName.typeRepTyCon) elem ++ "," ++ (tyConModule.typeRepTyCon) elem ++ "," ++(tyConPackage.typeRepTyCon) elem) transTable
  --when (res==Nothing) (liftIO $ putStrLn $ (tyConName.typeRepTyCon) rep ++ "," ++ (tyConModule.typeRepTyCon) rep ++ "," ++(tyConPackage.typeRepTyCon) rep ++ "\n")
- let gkey = typeRepKey rep
- mapM_ (\(elem,_) -> let key = typeRepKey elem in liftIO $ putStrLn $ show (gkey==key) ++ ".." ++(tyConPackage.typeRepTyCon) elem ++ ".." ++ (tyConModule.typeRepTyCon) elem ++ ".." ++(tyConName.typeRepTyCon) elem) transTable
- liftIO$putStrLn$ "\n" ++ (tyConPackage.typeRepTyCon) rep ++ ".." ++ (tyConModule.typeRepTyCon) rep ++ ".." ++(tyConName.typeRepTyCon) rep
- liftIO$putStrLn$show (lookup rep transTable)  ++ "\n\n"
- return $ lookup rep transTable
+ --let gkey = typeRepKey rep
+ --mapM_ (\(elem,_) -> let key = typeRepKey elem in liftIO $ putStrLn $ show (gkey==key) ++ ".." ++(tyConPackage.typeRepTyCon) elem ++ ".." ++ (tyConModule.typeRepTyCon) elem ++ ".." ++(tyConName.typeRepTyCon) elem) transTable
+
+ --liftIO$putStrLn$ "\n" ++ (tyConPackage.typeRepTyCon) rep ++ ".." ++ (tyConModule.typeRepTyCon) rep ++ ".." ++(tyConName.typeRepTyCon) rep
+
+ --liftIO$putStrLn$show (lookup rep transTable)  ++ "\n\n"
+
+ --return $ lookup rep transTable
 
 
 -- | Add enumerated types to the global state
