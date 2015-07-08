@@ -5,10 +5,10 @@
 module VHDLBackend (vhdlBackendTest) where
 -- import the example-modules
 import ALU
-import Counter
+--import Counter
 import ParAddFour
 import Multiplexer
-import Multiplexer_FSVector
+--import Multiplexer_FSVector
 import SeqAddFour
 import ButtonEncoder        
 import ZipTwist
@@ -21,7 +21,7 @@ import Data.List (transpose)
 import Data.Param.FSVec (vectorTH, reallyUnsafeVector)
 import System.Random
 import Test.HUnit
-import ForSyDe
+import ForSyDe.Deep
 import Data.Int
 
 vhdlBackendTest :: Test
@@ -56,10 +56,11 @@ aluTest =  "aluTest" ~: outSim <~=?> outVHDL
        outVHDL = vhdlTest Nothing aluSys select op1 op2
 
 counterTest :: Test
-counterTest = "counterTest" ~: "first 400 outputs" ~: 
-                                   out400Sim <~=?>  out400VHDLSim
- where out400Sim = take 400 simCounter
-       out400VHDLSim = vhdlTest (Just 400) counterSys
+counterTest = TestCase $ assertFailure "Not running counterTest due to broken newSysFunTHName"
+--counterTest = "counterTest" ~: "first 400 outputs" ~: 
+--                                   out400Sim <~=?>  out400VHDLSim
+-- where out400Sim = take 400 simCounter
+--       out400VHDLSim = vhdlTest (Just 400) counterSys
 
 parAddFourTest :: Test
 parAddFourTest = "parAddFourTest" ~: test doTest
@@ -112,12 +113,13 @@ muxTest = "muxTest" ~:  Multiplexer.simMux sel input <~=?>
 
 
 muxFSVecTest :: Test
-muxFSVecTest = "muxTest" ~:  Multiplexer_FSVector.simMux sel input <~=?> 
-                        vhdlTest Nothing Multiplexer_FSVector.muxSysDef sel input
- where sel = [$(vectorTH [L,L]),$(vectorTH [L,H]),$(vectorTH [H,L]),$(vectorTH [H,H])]
-       input = [$(vectorTH [L,L,L,H]), $(vectorTH [L,L,H,L]), $(vectorTH [L,H,L,L]),
-                $(vectorTH [H,L,L,L])]
-
+muxFSVecTest = TestCase $ assertFailure "Not running muxFSVecTest due to broken newSysFunTHName"
+--muxFSVecTest = "muxTest" ~:  Multiplexer_FSVector.simMux sel input <~=?> 
+--                        vhdlTest Nothing Multiplexer_FSVector.muxSysDef sel input
+-- where sel = [$(vectorTH [L,L]),$(vectorTH [L,H]),$(vectorTH [H,L]),$(vectorTH [H,H])]
+--       input = [$(vectorTH [L,L,L,H]), $(vectorTH [L,L,H,L]), $(vectorTH [L,H,L,L]),
+--                $(vectorTH [H,L,L,L])]
+--
 seqAddFourTest :: Test
 seqAddFourTest = "seqAddFourTest" ~: simAddFour input <~=?>
                                      vhdlTest Nothing addFourSys input
