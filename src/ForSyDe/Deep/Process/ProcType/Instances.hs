@@ -54,7 +54,7 @@ getEnumAlgTy a = case dataTypeRep dt of
    return (EnumAlgTy dn strs)
   _ -> Nothing
  where dt = dataTypeOf a
-       tycon = typeRepTyCon.typeOf a
+       tycon = typeRepTyCon.typeOf $ a
        modName = tyConModule tycon
        baseName = tyConName tycon
        dn = modName ++ "." ++ baseName
