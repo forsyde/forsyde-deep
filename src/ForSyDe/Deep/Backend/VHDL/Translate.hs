@@ -24,7 +24,6 @@ import ForSyDe.Deep.Ids
 import ForSyDe.Deep.AbsentExt
 import ForSyDe.Deep.Signal
 import ForSyDe.Deep.Bit hiding (not)
-import qualified ForSyDe.Deep.Bit as B
 import ForSyDe.Deep.ForSyDeErr
 import ForSyDe.Deep.System.SysDef
 import ForSyDe.Deep.Process.ProcFun
@@ -50,9 +49,11 @@ import Text.Regex.Posix ((=~))
 
 import Data.TypeLevel.Num.Reps
 
-import Debug.Trace
 
 -- enable tracing of type translation
+
+-- import Debug.Trace
+debug :: a -> String -> a
 -- debug = flip trace
 debug a _ = a
 
@@ -419,7 +420,7 @@ doCustomTR2TM rep | isTuple = do
   -- Create the record
   return $ Left $ (TypeDec recordId (TDR $ RecordTypeDef elems))
  where (cons, args) = splitTyConApp rep
-       conStr = tyConString cons
+       conStr = tyConName cons
        isTuple = (length conStr > 2) && (all (==',') (reverse.tail.reverse.tail $ conStr))
 
 
@@ -867,9 +868,9 @@ transTLNat2Int :: TypeRep -> Int
 transTLNat2Int tr
   -- Digit
   -- FIXME: Could be made cleaner. It was like this before:
-  -- isDigit = (digitToInt.last.tyConString) cons
+  -- isDigit = (digitToInt.last.tyConName) cons
   -- which was not able to take care of e.g. Data.TypeLevel.Num.Aliases.D10
-  | isDigit = (read.reverse.takeWhile (/='D').reverse.tyConString) cons
+  | isDigit = (read.reverse.takeWhile (/='D').reverse.tyConName) cons
   -- Connective
   | otherwise = 10 * (transTLNat2Int prefix) + (transTLNat2Int lastDigit)
  where (cons, args@(~[prefix, lastDigit])) = splitTyConApp tr
