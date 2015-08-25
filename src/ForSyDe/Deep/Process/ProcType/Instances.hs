@@ -1,5 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables, FlexibleInstances,
-             UndecidableInstances, OverlappingInstances, TemplateHaskell #-}
+             UndecidableInstances, TemplateHaskell #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  ForSyDe.Deep.System.SysFun.Instances
@@ -64,7 +64,7 @@ getEnumAlgTy a = case dataTypeRep dt of
 -- Instances
 -------------
 
-instance (Lift a, Data a) => ProcType a where
+instance {-# OVERLAPPABLE #-} (Lift a, Data a) => ProcType a where
  getEnums _ = maybe empty singleton (getEnumAlgTy (undefined :: a))
  -- We add parenthesis and try to use gread. 
  -- In addition, since gread is broken for unit (), we create or own parser
