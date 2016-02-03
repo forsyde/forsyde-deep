@@ -1,4 +1,5 @@
------------------------------------------------------------------------------
+{-# LANGUAGE ScopedTypeVariables #-}
+----------------------------------------------------------------------------
 -- |
 -- Module      :  ForSyDe.Deep.Process.ProcVal
 -- Copyright   :  (c) ES Group, KTH/ICT/ES 2007-2013
@@ -17,9 +18,10 @@ module ForSyDe.Deep.Process.ProcVal where
 
 import ForSyDe.Deep.Process.ProcType
 
-import Data.Typeable (Typeable(..), TypeRep)
+import Data.Typeable (TypeRep, typeRep)
 import Data.Dynamic (toDyn, Dynamic)
 import Data.Set
+import Data.Proxy
 import Language.Haskell.TH (Exp, runQ)
 import Language.Haskell.TH.Syntax (Lift(..))
 import System.IO.Unsafe (unsafePerformIO)
@@ -44,5 +46,5 @@ mkProcVal val = ProcVal (toDyn val) (mkProcValAST val)
 mkProcValAST :: (Lift a, ProcType a) => a -> ProcValAST 
 -- FIMXE: the unsafePerformIO won't be needed once the Data a => Lift a
 --        instance is created
-mkProcValAST val = ProcValAST (unsafePerformIO.runQ.lift $ val) (typeOf val) 
+mkProcValAST (val :: x) = ProcValAST (unsafePerformIO.runQ.lift $ val) (typeRep (Proxy :: Proxy x))
                               (getEnums val)

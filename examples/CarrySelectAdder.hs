@@ -23,7 +23,7 @@ fullAddFun = $(newProcFun [d|fullAddFun :: Bit -> Bit -> Bit -> (Bit, Bit)
                              --  where c_out = (a .&. b) .|. (a .&. c_in) .|. (b .&. c_in)
                              --        sum = (a `xor` b) `xor` c_in  |])
                              fullAddFun a b c_in = ((a .&. b) .|. (a .&. c_in) .|. (b .&. c_in),
-						    (a `xor` b) `xor` c_in) |])
+                                                    (a `xor` b) `xor` c_in) |])
 
 --fullAddProc :: Signal Bit -> Signal Bit -> Signal Bit -> Signal (Bit, Bit)
 --fullAddProc = zipWith3SY "fulladd" fullAddFun
@@ -66,40 +66,40 @@ vhdlMux21 = writeVHDL mux21Sys
 ------ 4-bit Adder Chain
 
 fourBitAdder :: Signal Bit   -- C_IN
-	     -> Signal Bit   -- A3
+             -> Signal Bit   -- A3
              -> Signal Bit   -- A2
              -> Signal Bit   -- A1
-	     -> Signal Bit   -- A0
+             -> Signal Bit   -- A0
              -> Signal Bit   -- B3
-	     -> Signal Bit   -- B2
-	     -> Signal Bit   -- B1
-	     -> Signal Bit   -- B0
-	     -> (Signal Bit, -- C_OUT
-	         Signal Bit, -- SUM3
-	         Signal Bit, -- SUM2
-	         Signal Bit, -- SUM1
-	         Signal Bit) -- SUM0
-fourBitAdder c_in a3 a2 a1 a0 b3 b2 b1 b0 
+             -> Signal Bit   -- B2
+             -> Signal Bit   -- B1
+             -> Signal Bit   -- B0
+             -> (Signal Bit, -- C_OUT
+                 Signal Bit, -- SUM3
+                 Signal Bit, -- SUM2
+                 Signal Bit, -- SUM1
+                 Signal Bit) -- SUM0
+fourBitAdder c_in a3 a2 a1 a0 b3 b2 b1 b0
                 = (c_out, sum3, sum2, sum1, sum0)
-		  where (c_out, sum3) = (instantiate "add3" fullAddSys) a3 b3 c2
-		        (c2, sum2)    = (instantiate "add2" fullAddSys) a2 b2 c1
-		        (c1, sum1)    = (instantiate "add1" fullAddSys) a1 b1 c0
-		        (c0, sum0)    = (instantiate "add0" fullAddSys) a0 b0 c_in
+                  where (c_out, sum3) = (instantiate "add3" fullAddSys) a3 b3 c2
+                        (c2, sum2)    = (instantiate "add2" fullAddSys) a2 b2 c1
+                        (c1, sum1)    = (instantiate "add1" fullAddSys) a1 b1 c0
+                        (c0, sum0)    = (instantiate "add0" fullAddSys) a0 b0 c_in
 
 fourBitAdderSys :: SysDef (Signal Bit   -- C_IN
-			-> Signal Bit   -- A3
-			-> Signal Bit   -- A2
-			-> Signal Bit   -- A1
-			-> Signal Bit   -- A0
-			-> Signal Bit   -- B3
-			-> Signal Bit   -- B2
-			-> Signal Bit   -- B1
-			-> Signal Bit   -- B0
-			-> (Signal Bit, -- C_OUT
-			    Signal Bit, -- SUM3
-			    Signal Bit, -- SUM2
-			    Signal Bit, -- SUM1
-			    Signal Bit)) -- SUM0 	
+                        -> Signal Bit   -- A3
+                        -> Signal Bit   -- A2
+                        -> Signal Bit   -- A1
+                        -> Signal Bit   -- A0
+                        -> Signal Bit   -- B3
+                        -> Signal Bit   -- B2
+                        -> Signal Bit   -- B1
+                        -> Signal Bit   -- B0
+                        -> (Signal Bit, -- C_OUT
+                            Signal Bit, -- SUM3
+                            Signal Bit, -- SUM2
+                            Signal Bit, -- SUM1
+                            Signal Bit)) -- SUM0
 fourBitAdderSys = newSysDef fourBitAdder "fourBitAdder" ["C_IN", "A3", "A2", "A1", "A0",
                                              "B3", "B2", "B1", "B0"]
                                             ["C_OUT", "SUM3", "SUM2", "SUM1", "SUM0"]
@@ -116,38 +116,38 @@ zero = [L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L]
 one = [H,H,H,H,H,H,H,H,H,H,H,H,H,H,H,H]
 
 
-simAdd_0 = simFourBitAdder zero a3 a2 a1 a0 a3 a2 a1 a0 
-simAdd_1 = simFourBitAdder one a3 a2 a1 a0 a3 a2 a1 a0  
+simAdd_0 = simFourBitAdder zero a3 a2 a1 a0 a3 a2 a1 a0
+simAdd_1 = simFourBitAdder one a3 a2 a1 a0 a3 a2 a1 a0
 
 ----- fourBitCarrySelectAdder
 
 
 fourBitCSAdder :: Signal Bit   -- C_IN
-	       -> Signal Bit   -- A3
+               -> Signal Bit   -- A3
                -> Signal Bit   -- A2
                -> Signal Bit   -- A1
-	       -> Signal Bit   -- A0
+               -> Signal Bit   -- A0
                -> Signal Bit   -- B3
-	       -> Signal Bit   -- B2
-	       -> Signal Bit   -- B1
-	       -> Signal Bit   -- B0
-	       -> (Signal Bit, -- C_OUT
-	          Signal Bit, -- SUM3
-	          Signal Bit, -- SUM2
-	          Signal Bit, -- SUM1
-	          Signal Bit) -- SUM0fourBitCSAdder :: 
+               -> Signal Bit   -- B2
+               -> Signal Bit   -- B1
+               -> Signal Bit   -- B0
+               -> (Signal Bit, -- C_OUT
+                  Signal Bit, -- SUM3
+                  Signal Bit, -- SUM2
+                  Signal Bit, -- SUM1
+                  Signal Bit) -- SUM0fourBitCSAdder ::
 fourBitCSAdder c_in a3 a2 a1 a0 b3 b2 b1 b0
                = (c_out, sum3, sum2, sum1, sum0)
                  where c_out = (instantiate "mux4" mux21Sys) c_in c_out_1 c_out_0
                        sum3  = (instantiate "mux3" mux21Sys) c_in sum3_1 sum3_0
                        sum2  = (instantiate "mux2" mux21Sys) c_in sum2_1 sum2_0
-                       sum1  = (instantiate "mux1" mux21Sys) c_in sum1_1 sum1_0 
+                       sum1  = (instantiate "mux1" mux21Sys) c_in sum1_1 sum1_0
                        sum0  = (instantiate "mux0" mux21Sys) c_in sum0_1 sum0_0
-                       (c_out_1, sum3_1, sum2_1, sum1_1, sum0_1) 
-                             = (instantiate "Adder_1" fourBitAdderSys) 
+                       (c_out_1, sum3_1, sum2_1, sum1_1, sum0_1)
+                             = (instantiate "Adder_1" fourBitAdderSys)
                                 one a3 a2 a1 a0 b3 b2 b1 b0
-                       (c_out_0, sum3_0, sum2_0, sum1_0, sum0_0) 
-                             = (instantiate "Adder_1" fourBitAdderSys) 
+                       (c_out_0, sum3_0, sum2_0, sum1_0, sum0_0)
+                             = (instantiate "Adder_1" fourBitAdderSys)
                                 zero a3 a2 a1 a0 b3 b2 b1 b0
                        one = instantiate "One" oneSys
                        zero = instantiate "Zero" zeroSys
@@ -160,9 +160,9 @@ fourBitCSAdderSys = newSysDef fourBitCSAdder "fourBitCSAdder" ["C_IN", "A3", "A2
 simFourBitCSAdder = simulate fourBitCSAdderSys
 
 vhdlFourBitCSAdder = writeVHDL fourBitCSAdderSys
-                           
-simCSAdd_0 = simFourBitAdder zero a3 a2 a1 a0 a3 a2 a1 a0 
-simCSAdd_1 = simFourBitAdder one a3 a2 a1 a0 a3 a2 a1 a0  
+
+simCSAdd_0 = simFourBitAdder zero a3 a2 a1 a0 a3 a2 a1 a0
+simCSAdd_1 = simFourBitAdder one a3 a2 a1 a0 a3 a2 a1 a0
 
 ----- Convert Output to FSVec
 
@@ -171,7 +171,7 @@ convertToFSVec5 x4 x3 x2 x1 x0 = x4 +> x3 +> x2 +> x1 +> (singleton x0)
 
 convOutput :: ProcFun (Bit -> Bit -> Bit -> Bit -> Bit -> FSVec D5 Bit)
 convOutput = $(newProcFun [d|convOutput :: Bit -> Bit -> Bit -> Bit -> Bit -> FSVec D5 Bit
-                             convOutput x4 x3 x2 x1 x0 
+                             convOutput x4 x3 x2 x1 x0
                                     = convertToFSVec5 x4 x3 x2 x1 x0 |])
 
 convOutputProc :: Signal Bit -> Signal Bit -> Signal Bit -> Signal Bit -> Signal Bit -> Signal (FSVec D5 Bit)
@@ -181,30 +181,30 @@ convOutputSys :: SysDef (Signal Bit -> Signal Bit -> Signal Bit -> Signal Bit ->
 convOutputSys =  newSysDef convOutputProc "convOutput" ["x4", "x3", "x2", "x1", "x0"] ["vec5"]
 
 fourBitCSAdder' :: Signal Bit   -- C_IN
-	        -> Signal Bit   -- A3
+                -> Signal Bit   -- A3
                 -> Signal Bit   -- A2
                 -> Signal Bit   -- A1
-	        -> Signal Bit   -- A0
+                -> Signal Bit   -- A0
                 -> Signal Bit   -- B3
-	        -> Signal Bit   -- B2
-	        -> Signal Bit   -- B1
-	        -> Signal Bit   -- B0
-	        -> Signal (FSVec D5 Bit) -- <C_OUT, SUM3, SUM2, SUM1, SUM0>
+                -> Signal Bit   -- B2
+                -> Signal Bit   -- B1
+                -> Signal Bit   -- B0
+                -> Signal (FSVec D5 Bit) -- <C_OUT, SUM3, SUM2, SUM1, SUM0>
 fourBitCSAdder' c_in a3 a2 a1 a0 b3 b2 b1 b0 = out5
                where
                   out5 = (instantiate "toVector5" convOutputSys) c_out sum3 sum2 sum1 sum0
-                  (c_out, sum3, sum2, sum1, sum0) = (instantiate "Adder" fourBitCSAdderSys) c_in a3 a2 a1 a0 b3 b2 b1 b0  
+                  (c_out, sum3, sum2, sum1, sum0) = (instantiate "Adder" fourBitCSAdderSys) c_in a3 a2 a1 a0 b3 b2 b1 b0
 
 fourBitCSAdderSys2 :: SysDef (Signal Bit   -- C_IN
-	        -> Signal Bit   -- A3
+                -> Signal Bit   -- A3
                 -> Signal Bit   -- A2
                 -> Signal Bit   -- A1
-	        -> Signal Bit   -- A0
+                -> Signal Bit   -- A0
                 -> Signal Bit   -- B3
-	        -> Signal Bit   -- B2
-	        -> Signal Bit   -- B1
-	        -> Signal Bit   -- B0
-	        -> Signal (FSVec D5 Bit))
+                -> Signal Bit   -- B2
+                -> Signal Bit   -- B1
+                -> Signal Bit   -- B0
+                -> Signal (FSVec D5 Bit))
 fourBitCSAdderSys2 = newSysDef fourBitCSAdder' "fourBitCSAdder" ["C_IN", "A3", "A2", "A1", "A0",
                                              "B3", "B2", "B1", "B0"]
                                             ["vect5"]
@@ -213,13 +213,13 @@ simFourBitCSAdder2 = simulate fourBitCSAdderSys2
 
 vhdlFourBitCSAdder2 = writeVHDL fourBitCSAdderSys2
 
-simCSAdd_0' = simFourBitCSAdder2 zero a3 a2 a1 a0 a3 a2 a1 a0 
-simCSAdd_1' = simFourBitCSAdder2 one a3 a2 a1 a0 a3 a2 a1 a0  
+simCSAdd_0' = simFourBitCSAdder2 zero a3 a2 a1 a0 a3 a2 a1 a0
+simCSAdd_1' = simFourBitCSAdder2 one a3 a2 a1 a0 a3 a2 a1 a0
 
 
------ Four Bit Adder 
+----- Four Bit Adder
 --
--- The four bit adder is modelled as a set of equations. 
+-- The four bit adder is modelled as a set of equations.
 -- It uses fixed-size vectors for the 4-bit input and output values.
 
 adder4BitFun :: ProcFun (Bit -> FSVec D4 Bit -> FSVec D4 Bit -> (Bit, FSVec D4 Bit))
@@ -291,7 +291,7 @@ oneSys = newSysDef oneProc "one" [] ["one"]
 -- Constant input 'L' modeled with constSY
 zeroProc :: Signal Bit
 zeroProc = constSY "low" L
- 
+
 zeroSys :: SysDef (Signal Bit)
 zeroSys = newSysDef zeroProc "zero" [] ["zero"]
 
@@ -301,10 +301,10 @@ csAdder4BitProc cin a b = (cout, sum) where
                           cout = (instantiate "mux" mux21Sys) cin cout_1 cout_0
                           sum = (instantiate "mux4Bit" mux21_4BitSys) cin sum_1 sum_0
                           (cout_1, sum_1) = (instantiate "adder1" adder4BitSys) one a b
-                          (cout_0, sum_0) = (instantiate "adder0" adder4BitSys) zero a b                  
+                          (cout_0, sum_0) = (instantiate "adder0" adder4BitSys) zero a b
                           one = instantiate "One" oneSys
                           zero = instantiate "Zero" zeroSys
-                           
+
 csAdder4BitSys :: SysDef (Signal Bit -> Signal (FSVec D4 Bit) -> Signal (FSVec D4 Bit) -> (Signal Bit, Signal (FSVec D4 Bit)))
 csAdder4BitSys = newSysDef csAdder4BitProc "csAdder4Bit" ["cin", "a", "b"] ["cout", "sum"]
 
@@ -329,7 +329,7 @@ csAdder16BitProc a b = (cout, sum) where
                        b11_8  = mapSY "b11_8"  select11_8Fun b
                        b7_4   = mapSY "b7_4"   select7_4Fun b
                        b3_0   = mapSY "b3 _0"  select3_0Fun b
-                       zero = instantiate "Zero" zeroSys         
+                       zero = instantiate "Zero" zeroSys
 
 
 csAdder16BitSys = newSysDef csAdder16BitProc "csAdder16Bit" ["a", "b"] ["cout", "sum"]
@@ -358,9 +358,9 @@ select3_0Fun = $(newProcFun [d|select3_0 :: FSVec D16 Bit -> FSVec D4 Bit
 
 concat4Fun :: ProcFun (FSVec D4 Bit -> FSVec D4 Bit -> FSVec D4 Bit -> FSVec D4 Bit -> FSVec D16 Bit)
 concat4Fun = $(newProcFun [d|concat4Fun :: FSVec D4 Bit -> FSVec D4 Bit -> FSVec D4 Bit -> FSVec D4 Bit -> FSVec D16 Bit
-                             concat4Fun v1 v2 v3 v4 = v1 Data.Param.FSVec.++ 
-                                                      v2 Data.Param.FSVec.++ 
-                                                      v3 Data.Param.FSVec.++ 
+                             concat4Fun v1 v2 v3 v4 = v1 Data.Param.FSVec.++
+                                                      v2 Data.Param.FSVec.++
+                                                      v3 Data.Param.FSVec.++
                                                       v4 |])
 
 -- 16 Bit Test Values
@@ -386,9 +386,9 @@ a4 = v_0 : v_0 : v_1 : v_8 : v_f : v_1 : []
 b4 = v_0 : v_1 : v_1 : v_8 : v_f : v_f : []
 
 c_low = [L,L,L,L,L,L]
-c_high = [H,H,H,H,H,H] 
+c_high = [H,H,H,H,H,H]
 
-test4Bit = simCSAdder4Bit c_low a4 b4 
+test4Bit = simCSAdder4Bit c_low a4 b4
 
 -- Test FSVector
 

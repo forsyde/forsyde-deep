@@ -14,10 +14,5 @@
 module ForSyDe.Deep.Config (maxTupleSize, module Paths_ForSyDe_Deep) where
 
 import Paths_ForSyDe_Deep
+import GHC.Exts (maxTupleSize)
 
--- | Maximum tuple size
-maxTupleSize :: Int
--- 62: this is the GHC-hardcoded value as of version 6.8.2
---     in the future there will be a way to avoid hardcoding this value.
---     See: http://hackage.haskell.org/trac/ghc/ticket/2364
-maxTupleSize = 62

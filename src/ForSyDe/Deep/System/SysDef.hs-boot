@@ -1,3 +1,4 @@
+{-# LANGUAGE RoleAnnotations #-}
 -- SysDef.hs-boot: GHC bootstrapping module for Netlist.hs
 -- (it breaks the recursive import loop with Netlist.hs)
 -- See "How to compile mutually recursive modules" in GHC's manual for details
@@ -10,6 +11,7 @@ import Data.Typeable (TypeRep)
 
 type Iface = [(PortId, TypeRep)]
 
+type role SysDef phantom
 newtype SysDef a = SysDef {unSysDef :: PrimSysDef}
 
 newtype PrimSysDef = PrimSysDef {unPrimSysDef :: URef SysDefVal}

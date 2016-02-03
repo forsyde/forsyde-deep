@@ -32,10 +32,11 @@ module Language.Haskell.TH.TypeLib
   type2TypeRep)
  where
 
+import Data.Typeable.Internal
 import Data.Dynamic
-import Language.Haskell.TH (Type(..), Cxt, TyVarBndr(..), pprint, mkName)
+import Language.Haskell.TH (Type(..), Cxt, TyVarBndr(..), pprint, mkName, nameModule, nameBase)
 import Text.Regex.Posix ((=~))
-import Data.Maybe(isJust)
+import Data.Maybe(isJust, fromMaybe)
 
 -- Due to type translations
 import GHC.Exts (RealWorld)
@@ -45,11 +46,11 @@ import System.IO (Handle)
 import Data.IORef (IORef)
 import Foreign (Ptr, FunPtr, StablePtr, ForeignPtr)
 import Data.Array (Array)
-import Control.OldException (Exception,
-                          AsyncException,
-                          ArrayException,
-                          ArithException,
-                          IOException)
+--import Control.OldException (Exception,
+--                          AsyncException,
+--                          ArrayException,
+--                          ArithException,
+--                          IOException)
 import Data.Ratio (Ratio)
 import Control.Concurrent.MVar (MVar)
 
@@ -207,6 +208,7 @@ type2TypeRep (t1 `AppT` t2) = do
   return $ tRep1 `mkAppTy` tRep2
 -- Constructors
 type2TypeRep (ConT name)
+  -- FIXME: This should not be needed in the newer versions of ghc:
   -- There are certain TyCons whose string does not correspond
   -- to the hierarchical name of the constructor (the instances generated
   -- in Data.Typeable), we have to cover all those cases by hand
@@ -231,11 +233,11 @@ type2TypeRep (ConT name)
             (''Either         , typeableCon (undefined :: Either () ())   ),
             (''(->)           , typeableCon (undefined :: () -> ())       ),
             (''MVar           , typeableCon (undefined :: MVar ())        ),
-            (''Exception      , typeableCon (undefined :: Exception)      ),
-            (''IOException    , typeableCon (undefined :: IOException)    ),
-            (''ArithException , typeableCon (undefined :: ArithException) ),
-            (''ArrayException , typeableCon (undefined :: ArrayException) ),
-            (''AsyncException , typeableCon (undefined :: AsyncException) ),
+            --(''Exception      , typeableCon (undefined :: Exception)      ),
+            --(''IOException    , typeableCon (undefined :: IOException)    ),
+            --(''ArithException , typeableCon (undefined :: ArithException) ),
+            --(''ArrayException , typeableCon (undefined :: ArrayException) ),
+            --(''AsyncException , typeableCon (undefined :: AsyncException) ),
             (''Array          , typeableCon (undefined :: Array () ())    ),
             (''Ptr            , typeableCon (undefined :: Ptr ())         ),
             (''FunPtr         , typeableCon (undefined :: FunPtr ())      ),
@@ -308,7 +310,13 @@ tyConStr2Type str  = ConT $ mkName str
 -- Get the type constructor corresponding to a String
 -- in form of a type representation
 strCon :: String -> TypeRep
-strCon str = mkTyCon str `mkTyConApp` []
+strCon str = mkTyCon3 pkg mod base `mkTyConApp` []
+        where
+                name = mkName str
+                pkg  = ""
+                mod  = fromMaybe "" (nameModule name)
+                base = nameBase name
+
 
 -- Get the type constructor corresponding to a typeable value
 -- in form of a type representation

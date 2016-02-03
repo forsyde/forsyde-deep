@@ -21,7 +21,6 @@ module Language.Haskell.TH.Lift (deriveLift1, deriveLift) where
 import GHC.Exts
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
-import Language.Haskell.TH.Syntax.Internals
 import Control.Monad (liftM)
 
 modName :: String
@@ -59,10 +58,12 @@ deriveLift n
       case i of
           TyConI (DataD dcxt _ vs cons _) ->
               let ctxt = liftM (++ dcxt) $ 
-                         cxt [return $ ClassP ''Lift [VarT v'] | v' <- vs']
+                         cxt [appT (conT ''Lift) (varT v') | v' <- vs']
                   typ = foldl appT (conT n) $ map varT vs'
                   fun = funD 'lift (map doCons cons)
-                  vs' = map (\(PlainTV v) -> v) vs
+                  vs' = map (\v -> case v of
+                                    PlainTV name -> name
+                                    KindedTV name _ -> name) vs
               in instanceD ctxt (conT ''Lift `appT` typ) [fun]
                  --do sh<-instanceD ctxt (conT ''Lift `appT` typ) [fun]
                  --   error (pprint sh)
@@ -99,10 +100,8 @@ instance Lift PkgName where
 instance Lift NameFlavour where
     lift NameS = [| NameS |]
     lift (NameQ modName) = [| NameQ modName |]
-    lift (NameU i) = [| case $( lift (I# i) ) of
-                            I# i' -> NameU i' |]
-    lift (NameL i) = [| case $( lift (I# i) ) of
-                            I# i' -> NameL i' |]
+    lift (NameU i) = [| NameU i |]
+    lift (NameL i) = [| NameL i |]
     lift (NameG nameSpace pkgName modName)
      = [| NameG nameSpace pkgName modName |]
 

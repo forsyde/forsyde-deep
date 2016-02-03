@@ -10,26 +10,26 @@ import Data.TypeLevel.Num.Aliases
 
 -- I used tuples, but a vector of bits is what I would like to have
 selectf :: ProcFun(FSVec D2 Bit -> FSVec D4 Bit -> Bit)
-selectf = $(newProcFun [d| select1 :: FSVec D2 Bit 
-				   -> FSVec D4 Bit -> Bit   
-			   select1 sel input =
-		             if (sel!d1 == L) && (sel!d0 == L) then
-				input!d0
-			     else 
-				if (sel!d1 == L) && (sel!d0 == H) then
-				   input!d1
-				else
-				   if (sel!d1 == H) && (sel!d0 == L) then
-				      input!d2
-				   else
-				      input!d3   |])
+selectf = $(newProcFun [d| select1 :: FSVec D2 Bit
+                                   -> FSVec D4 Bit -> Bit
+                           select1 sel input =
+                             if (sel!d1 == L) && (sel!d0 == L) then
+                                input!d0
+                             else
+                                if (sel!d1 == L) && (sel!d0 == H) then
+                                   input!d1
+                                else
+                                   if (sel!d1 == H) && (sel!d0 == L) then
+                                      input!d2
+                                   else
+                                      input!d3   |])
 
 
 -- System function (or process) which uses 'selectf'
 selectProc :: Signal (FSVec D2 Bit) -> Signal (FSVec D4 Bit) -> Signal Bit
 selectProc = zipWithSY "select1" selectf
 
--- System definition associated to the system process 'selectProc' 
+-- System definition associated to the system process 'selectProc'
 muxSysDef :: SysDef (Signal (FSVec D2 Bit) -> Signal (FSVec D4 Bit) -> Signal Bit)
 muxSysDef = $(newSysDefTHName 'selectProc ["sel", "data"] ["out1"])
 

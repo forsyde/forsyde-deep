@@ -1,5 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables, FlexibleInstances,
-             UndecidableInstances, OverlappingInstances, TemplateHaskell #-}
+             UndecidableInstances, TemplateHaskell #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  ForSyDe.Deep.System.SysFun.Instances
@@ -46,7 +46,7 @@ isConsEnum = gunfold  (\_ -> IsConsEnum False) (\_ -> IsConsEnum True)
 
 -- | Tell if a member of "Data" belongs to an enumerated type
 --   and return its description.
-getEnumAlgTy :: forall a . Data a => a -> Maybe EnumAlgTy
+getEnumAlgTy :: forall a . (Typeable a, Data a) => a -> Maybe EnumAlgTy
 getEnumAlgTy a = case dataTypeRep dt of
   AlgRep cons -> do 
    strs <- mapM (\c -> toMaybe (unIsConsEnum (isConsEnum c :: IsConsEnum a)) 
@@ -54,14 +54,17 @@ getEnumAlgTy a = case dataTypeRep dt of
    return (EnumAlgTy dn strs)
   _ -> Nothing
  where dt = dataTypeOf a
-       dn = dataTypeName dt
+       tycon = typeRepTyCon.typeOf $ a
+       modName = tyConModule tycon
+       baseName = tyConName tycon
+       dn = modName ++ "." ++ baseName
        toMaybe bool c = if bool then Just c else Nothing
 
 -------------
 -- Instances
 -------------
 
-instance (Lift a, Data a) => ProcType a where
+instance {-# OVERLAPPABLE #-} (Lift a, Data a) => ProcType a where
  getEnums _ = maybe empty singleton (getEnumAlgTy (undefined :: a))
  -- We add parenthesis and try to use gread. 
  -- In addition, since gread is broken for unit (), we create or own parser

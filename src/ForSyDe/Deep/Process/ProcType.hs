@@ -1,4 +1,5 @@
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell, PolyKinds #-}
+{-# OPTIONS_GHC -fcontext-stack=64 #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  ForSyDe.Deep.Process.ProcType
@@ -45,7 +46,6 @@ class (Data a, Lift a) => ProcType a where
  --
  --   For example:
  --
- --
  -- >  module MyMod where
  -- >
  -- >  data Colour = Blue | Red
@@ -60,10 +60,9 @@ class (Data a, Lift a) => ProcType a where
  -- | Read a process type
  readProcType :: ReadP a
 
--- Function to automatically generate ProcType, Data, Lift and
--- Typeable instances for tuples (with 2 or more elements) with
--- Template Haskell. For example, in the case of 2 elements, the code
--- generated would be:
+-- Function to automatically generate ProcType, Data, and Lift
+-- instances for tuples (with 2 or more elements) with Template Haskell. For
+-- example, in the case of 2 elements, the code generated would be:
 --
 -- @
 -- instance (ProcType o1, ProcType o2) => ProcType (o1, o2) where
@@ -76,11 +75,8 @@ class (Data a, Lift a) => ProcType a where
 --            skipSpaces >> char ')'
 --            return (o1,o2)
 --
--- The next two are only necessary for tuples with more than 7 elements
---
--- instance (Typeable o1, Typeable o2) => Typeable (o1, o2) where
---  typeOf _ = mkTyCon "," `mkTyConApp`
---               [typeOf (undefined :: o1), typeOf (undefined :: o2)]
+-- deriving Data and Lift is only neccessary for tuples with more than 7
+-- elements:
 --
 -- instance (Data o1, Data o2) => Data (o1, o2) where
 --  gfoldl k z (o1, o2) = z (,) `k` o1 `k` o2
@@ -102,10 +98,9 @@ genTupInstances n = do
       accumApp accumT vName = accumT `appT` varT vName
   if n <= 7
      then sequence [genProcTypeIns outNames tupType]
-     else sequence [genTypeableIns outNames tupType,
-                    genDataIns outNames tupType]
-                    -- genLiftIns outNames tupType,
-                    --genProcTypeIns outNames tupType]
+     else sequence [genDataIns outNames tupType,
+                    genLiftIns outNames tupType,
+                    genProcTypeIns outNames tupType]
 
  where
   undef t = sigE [| undefined |] (varT t)
@@ -125,16 +120,15 @@ genTupInstances n = do
               noBindS [| return $(tupE $ map varE names) |] ] )
         readProcTypeD = funD 'readProcType
                              [clause []  (normalB readProcTypeExpr) []]
-        procTypeCxt = map (\vName -> return $ ClassP ''ProcType [VarT vName]) names ++
-                      map (\vName -> return $ ClassP ''Data [VarT vName]) names ++
-                      map (\vName -> return $ ClassP ''Lift [VarT vName]) names
+        procTypeCxt = map (\vName -> appT (conT ''ProcType) (varT vName)) names ++
+                      map (\vName -> appT (conT ''Data)     (varT vName)) names ++
+                      map (\vName -> appT (conT ''Lift)     (varT vName)) names
     instanceD (cxt procTypeCxt)
                      (conT ''ProcType `appT` tupType)
                      [getEnumsD, readProcTypeD]
   genDataIns :: [Name] -> Q Type -> Q Dec
   genDataIns names tupType = do
    k <- newName "k"
-   c <- newName "c"
    z <- newName "z"
    a <- newName "a"
    let tupCons = conE tupName
@@ -162,33 +156,17 @@ genTupInstances n = do
                                       [toConstr $(varE a)] |]
        dataTypeOfD = funD 'dataTypeOf
                           [clause [varP a] (normalB dataTypeOfExpr) []]
-       dataCxt = map (\vName -> return $ ClassP ''Data [VarT vName]) names
+       dataCxt = map (\vName -> appT (conT ''Data) (varT vName)) names
    instanceD (cxt dataCxt)
              (conT ''Data `appT` tupType)
              [gfoldlD, gunfoldD, toConstrD, dataTypeOfD]
-  genTypeableIns :: [Name] -> Q Type -> Q Dec
-  genTypeableIns names tupType = do
-   -- generate n-1 commas to be consistent with the (faulty) instances
-   -- of tuples from 2 to 7 elements
-   let strRep = '(':replicate (n-1) ','++")"
-       typeOfExpr = [| mkTyCon3 "ghc-prim" "GHC.Tuple"
-                        $(litE $ stringL strRep)
-                        `mkTyConApp`
-                        $(listE $ map (\n -> varE 'typeOf `appE` undef n) names)
-                     |]
-       typeOfD = funD 'typeOf
-                      [clause [wildP] (normalB typeOfExpr) []]
-       typeableCxt = map (\vName -> return $ ClassP ''Typeable [VarT vName]) names
-   instanceD (cxt typeableCxt)
-             (conT ''Typeable `appT` tupType)
-             [typeOfD]
   genLiftIns :: [Name] -> Q Type -> Q Dec
   genLiftIns names tupType = do
    let liftExpr =
            varE 'tupE `appE` listE (map (\n -> varE 'lift `appE` varE n) names)
        liftD = funD 'lift
                  [clause [tupP (map varP names)] (normalB liftExpr) []]
-       liftCxt = map (\vName -> return $ ClassP ''Lift [VarT vName]) names
+       liftCxt = map (\vName -> appT (conT ''Lift) (varT vName)) names
    instanceD (cxt liftCxt)
              (conT ''Lift `appT` tupType)
              [liftD]

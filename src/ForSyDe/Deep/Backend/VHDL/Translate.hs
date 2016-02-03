@@ -14,7 +14,6 @@
 -----------------------------------------------------------------------------
 module ForSyDe.Deep.Backend.VHDL.Translate where
 
-
 import ForSyDe.Deep.Backend.VHDL.AST
 import qualified ForSyDe.Deep.Backend.VHDL.AST as VHDL
 import ForSyDe.Deep.Backend.VHDL.Constants
@@ -25,7 +24,6 @@ import ForSyDe.Deep.Ids
 import ForSyDe.Deep.AbsentExt
 import ForSyDe.Deep.Signal
 import ForSyDe.Deep.Bit hiding (not)
-import qualified ForSyDe.Deep.Bit as B
 import ForSyDe.Deep.ForSyDeErr
 import ForSyDe.Deep.System.SysDef
 import ForSyDe.Deep.Process.ProcFun
@@ -50,6 +48,15 @@ import qualified Data.Param.FSVec as V
 import Text.Regex.Posix ((=~))
 
 import Data.TypeLevel.Num.Reps
+
+
+-- enable tracing of type translation
+
+-- import Debug.Trace
+debug :: a -> String -> a
+-- debug = flip trace
+debug a _ = a
+
 
 -- | Translate a System Definition to an Entity, explicitly returning
 --   the VHDL identifiers of its output signals.
@@ -315,21 +322,24 @@ transPortId2VHDL str = liftEProne $ mkVHDLExtId str
 -- Type translation
 -------------------
 
+
 -- | translate a 'TypeRep' to a VHDL 'TypeMark'
 -- We don't distinguish between a type and its version nested in 'Signal'
 -- since it makes no difference in VHDL
 transTR2TM :: TypeRep -> VHDLM TypeMark
 transTR2TM rep
  -- Is it a Signal?
- | isSignal = transTR2TM  nestedTR
+ | isSignal = transTR2TM  nestedTR `debug` (dbgStr "S")
  -- Is it a primitive type?
- | isJust mPrimitiveTM = return $ fromJust mPrimitiveTM
+ | isJust mPrimitiveTM = return $ fromJust mPrimitiveTM `debug` (dbgStr "P")
  -- Non-Primitive type, try to translate it
- | otherwise = customTR2TM rep
+ | otherwise = customTR2TM rep `debug` (dbgStr "T")
  where (isSignal, nestedTR) = let (tc,~[tr]) = splitTyConApp rep
                               in  (tc == signalTyCon, tr)
+                              -- FIXME check above Eq of TypeRep for correctness
        signalTyCon = (typeRepTyCon.typeOf) (undefined :: Signal ())
-       mPrimitiveTM = lookup rep primTypeTable
+       mPrimitiveTM = lookup (typeRepQName rep) primTypeTable
+       dbgStr k = ">>>>" ++ k ++ " " ++ (typeRepQName rep)
 
 
 -- | Translate a custom 'TypeRep' to a VHDL 'TypeMark'
@@ -410,7 +420,7 @@ doCustomTR2TM rep | isTuple = do
   -- Create the record
   return $ Left $ (TypeDec recordId (TDR $ RecordTypeDef elems))
  where (cons, args) = splitTyConApp rep
-       conStr = tyConString cons
+       conStr = tyConName cons
        isTuple = (length conStr > 2) && (all (==',') (reverse.tail.reverse.tail $ conStr))
 
 
@@ -443,13 +453,11 @@ doCustomTR2TM rep = do
  -- Get the accumulated Enumerated Algebraic Types
  eTys <- gets (enumTypes.global)
  -- Check if current Type representation can be found in eTys
- let modName = (tyConModule.typeRepTyCon) rep
- let modStr = if (modName/="") then (modName ++ ".") else ""
- let strRep = modStr ++ (tyConName.typeRepTyCon) rep
+ let strRep = typeRepQName rep
  let equalsRep (EnumAlgTy name _) = name == strRep
  case (S.toList.(S.filter equalsRep)) eTys of
    -- Found!
-   [enumDef] -> liftM Left $ enumAlg2TypeDec enumDef
+   [enumDef] -> liftM Left $ enumAlg2TypeDec enumDef `debug` (">>>>? "++strRep)
    -- Not found, unkown custom type
    _ ->  throwFError $ UnsupportedType rep
 
@@ -469,8 +477,9 @@ enumAlg2TypeDec (EnumAlgTy tn cons) = do
  return (TypeDec tMark (TDE $ EnumTypeDef enumLits))
 
 -- | Translation table for primitive types
-primTypeTable :: [(TypeRep, TypeMark)]
-primTypeTable = [-- Commented out due to representation overflow
+primTypeTable :: [(String, TypeMark)]
+primTypeTable = map (\(tr,tm) -> (typeRepQName tr,tm)) [
+                 -- Commented out due to representation overflow
                  -- (typeOf (undefined :: Int64), int64TM)   ,
                  (typeOf (undefined :: Int32), int32TM)   ,
                  (typeOf (undefined :: Int16), int16TM)   ,
@@ -831,12 +840,12 @@ transExp2VHDL (LetE decs e) = do
 transExp2VHDL lamE@(LamE _ _) = expErr lamE  LambdaAbstraction
 transExp2VHDL condE@(CondE _ _ _) = expErr condE Conditional
 transExp2VHDL caseE@(CaseE _ _) = expErr caseE Case
-transExp2VHDL doE@(DoE _) = expErr doE Do	
+transExp2VHDL doE@(DoE _) = expErr doE Do
 transExp2VHDL compE@(CompE _) = expErr compE ListComprehension
-transExp2VHDL arithSeqE@(ArithSeqE _) = expErr arithSeqE ArithSeq	
-transExp2VHDL listE@(ListE _) = expErr listE List	
-transExp2VHDL sigE@(SigE _ _) = expErr sigE Signature	
-transExp2VHDL reConE@(RecConE _ _) = expErr reConE Record	
+transExp2VHDL arithSeqE@(ArithSeqE _) = expErr arithSeqE ArithSeq
+transExp2VHDL listE@(ListE _) = expErr listE List
+transExp2VHDL sigE@(SigE _ _) = expErr sigE Signature
+transExp2VHDL reConE@(RecConE _ _) = expErr reConE Record
 transExp2VHDL recUpE@(RecUpdE _ _) = expErr recUpE Record
 
 -- The rest of expressions are not valid in practice and thus, not supported
@@ -859,9 +868,9 @@ transTLNat2Int :: TypeRep -> Int
 transTLNat2Int tr
   -- Digit
   -- FIXME: Could be made cleaner. It was like this before:
-  -- isDigit = (digitToInt.last.tyConString) cons
+  -- isDigit = (digitToInt.last.tyConName) cons
   -- which was not able to take care of e.g. Data.TypeLevel.Num.Aliases.D10
-  | isDigit = (read.reverse.takeWhile (/='D').reverse.tyConString) cons
+  | isDigit = (read.reverse.takeWhile (/='D').reverse.tyConName) cons
   -- Connective
   | otherwise = 10 * (transTLNat2Int prefix) + (transTLNat2Int lastDigit)
  where (cons, args@(~[prefix, lastDigit])) = splitTyConApp tr
@@ -900,3 +909,10 @@ unApp e = (first, rest, n)
  where (first:rest, n) = unAppAc ([],0) e
        unAppAc (xs,n) (f `AppE` arg) = unAppAc (arg:xs, n+1) f
        unAppAc (xs,n) f = (f:xs,n)
+
+typeRepQName :: TypeRep -> String
+typeRepQName tr = mod ++ dot ++ name
+ where  tc      = typeRepTyCon tr
+        mod     = tyConModule tc
+        name    = tyConName tc
+        dot     = if mod=="" then "" else "."

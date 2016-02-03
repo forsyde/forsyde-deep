@@ -73,7 +73,7 @@ $(let concatMapM f xs = liftM concat (mapM f xs)
       listFunOutInstances = liftM (\(a,b,c) -> [a,b,c]) . funOutInstances
       msg = "Generating and compiling " ++ show maxTupleSize ++ 
             " output instances of " ++
-            show ''SysFun ++ show ''SysFunToSimFun ++ 
+            show ''SysFun ++ ", " ++ show ''SysFunToSimFun ++ 
             " and " ++ show ''SysFunToIOSimFun ++ 
             ", this might take some time ... \n"
   in runIO (putStrLn $ msg) >>

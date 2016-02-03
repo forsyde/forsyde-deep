@@ -294,9 +294,9 @@ delaySY id v s = Signal (newNodeOutSig nodeRef DelaySYOut)
 delaynSY :: ProcType a =>
             ProcId    -- ^ Identifier
          -> a         -- ^Initial state
-	 -> Int       -- ^ Number of Delay cycles
-	 -> Signal a  -- ^Input signal
-	 -> Signal a  -- ^Output signal
+         -> Int       -- ^ Number of Delay cycles
+         -> Signal a  -- ^Input signal
+         -> Signal a  -- ^Output signal
 delaynSY id e n s = (\(a,_,_) -> a) $ delaynSYacum (s, 1, n)
     where
        delaynSYacum acum@(lastSig, curr, max)
@@ -315,13 +315,13 @@ delaynSY id e n s = (\(a,_,_) -> a) $ delaynSYacum (s, 1, n)
 --
 --   This is in contrast to the function 'scanldSY', which has its current
 --   state as its output value.
-scanlSY	:: (ProcType a, ProcType b) =>
+scanlSY :: (ProcType a, ProcType b) =>
            ProcId -- ^Process Identifier
         -> ProcFun (a -> b -> a) -- ^Combinational function for next
                                  -- state decoder
         -> a -- ^Initial state
-	-> Signal b -- ^ Input signal
-	-> Signal a -- ^ Output signal
+        -> Signal b -- ^ Input signal
+        -> Signal a -- ^ Output signal
 scanlSY id f mem s = s'
             where s' = zipWithSY (id ++ "_NxtSt") f
                                  (delaySY (id ++ "_Delay") mem s') s
@@ -334,9 +334,9 @@ scanl2SY :: (ProcType a, ProcType b, ProcType c) =>
         -> ProcFun (a -> b -> c -> a) -- ^Combinational function for next
                                       -- state decoder
         -> a -- ^Initial state
-	-> Signal b -- ^ First Input signal
+        -> Signal b -- ^ First Input signal
         -> Signal c -- ^ Second Input signal
-	-> Signal a -- ^ Output signal
+        -> Signal a -- ^ Output signal
 scanl2SY id f mem s1 s2 = s'
     where s' = zipWith3SY (id ++ "_NxtSt") f
                           (delaySY (id ++ "_Delay") mem s') s1 s2
@@ -349,10 +349,10 @@ scanl3SY :: (ProcType a, ProcType b, ProcType c, ProcType d) =>
         -> ProcFun (a -> b -> c -> d -> a) -- ^Combinational function for next
                                            -- state decoder
         -> a -- ^Initial state
-	-> Signal b -- ^ First Input signal
+        -> Signal b -- ^ First Input signal
         -> Signal c -- ^ Second Input signal
         -> Signal d -- ^ Third Input signal
-	-> Signal a -- ^ Output signal
+        -> Signal a -- ^ Output signal
 scanl3SY id f mem s1 s2 s3 = s'
     where s' = zipWith4SY (id ++ "_NxtSt") f
                           (delaySY (id ++ "_Delay") mem s') s1 s2 s3
@@ -364,11 +364,11 @@ scanl4SY :: (ProcType a, ProcType b, ProcType c, ProcType d, ProcType e) =>
         -> ProcFun (a -> b -> c -> d -> e -> a) -- ^Combinational function
                                                 -- for next state decoder
         -> a        -- ^Initial state
-	    -> Signal b -- ^ First Input signal
+        -> Signal b -- ^ First Input signal
         -> Signal c -- ^ Second Input signal
         -> Signal d -- ^ Third Input signal
         -> Signal e -- ^ Fourth Input signal
-	    -> Signal a -- ^ Output signal
+        -> Signal a -- ^ Output signal
 scanl4SY id f mem s1 s2 s3 s4 = s'
     where s' = zipWith5SY (id ++ "_NxtSt") f
                           (delaySY (id ++ "_Delay") mem s') s1 s2 s3 s4
