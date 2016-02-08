@@ -52,6 +52,7 @@ import ForSyDe.Deep.AbsentExt
 import qualified Data.Param.FSVec as V
 import Data.Param.FSVec hiding ((++), map)
 import Data.TypeLevel (Nat, toInt)
+import Data.Typeable.FSDTypeRepLib
 
 import Data.Set (union)
 import Data.Maybe
@@ -742,7 +743,7 @@ unzipSY :: forall a b . (ProcType a, ProcType b) =>
        -> (Signal a,Signal b)
 unzipSY id s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1)),
                 Signal (newNodeOutSig nodeRef (UnzipNSYOut 2)))
-  where ts = [typeOf (undefined :: a), typeOf (undefined :: b)]
+  where ts = [fsdTypeOf (undefined :: a), fsdTypeOf (undefined :: b)]
         nodeRef = newURef $ Proc id $
                      UnzipNSY ts untup (unSignal s)
         untup :: Dynamic -> [Dynamic]
@@ -759,8 +760,8 @@ unzip3SY :: forall a b c . (ProcType a, ProcType b, ProcType c) =>
 unzip3SY id s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1)),
                  Signal (newNodeOutSig nodeRef (UnzipNSYOut 2)),
                  Signal (newNodeOutSig nodeRef (UnzipNSYOut 3)))
-  where ts = [typeOf (undefined :: a), typeOf (undefined :: b),
-              typeOf (undefined :: c)]
+  where ts = [fsdTypeOf (undefined :: a), fsdTypeOf (undefined :: b),
+              fsdTypeOf (undefined :: c)]
         nodeRef = newURef $ Proc id $
                      UnzipNSY ts untup3 (unSignal s)
         untup3 :: Dynamic -> [Dynamic]
@@ -778,8 +779,8 @@ unzip4SY id s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1)),
                  Signal (newNodeOutSig nodeRef (UnzipNSYOut 2)),
                  Signal (newNodeOutSig nodeRef (UnzipNSYOut 3)),
                  Signal (newNodeOutSig nodeRef (UnzipNSYOut 4)))
-  where ts = [typeOf (undefined :: a), typeOf (undefined :: b),
-              typeOf (undefined :: c), typeOf (undefined :: d)]
+  where ts = [fsdTypeOf (undefined :: a), fsdTypeOf (undefined :: b),
+              fsdTypeOf (undefined :: c), fsdTypeOf (undefined :: d)]
         nodeRef = newURef $ Proc id $
                      UnzipNSY ts untup4 (unSignal s)
         untup4 :: Dynamic -> [Dynamic]
@@ -798,9 +799,9 @@ unzip5SY id s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1)),
                  Signal (newNodeOutSig nodeRef (UnzipNSYOut 3)),
                  Signal (newNodeOutSig nodeRef (UnzipNSYOut 4)),
                  Signal (newNodeOutSig nodeRef (UnzipNSYOut 5)))
-  where ts = [typeOf (undefined :: a), typeOf (undefined :: b),
-              typeOf (undefined :: c), typeOf (undefined :: d),
-              typeOf (undefined :: e)]
+  where ts = [fsdTypeOf (undefined :: a), fsdTypeOf (undefined :: b),
+              fsdTypeOf (undefined :: c), fsdTypeOf (undefined :: d),
+              fsdTypeOf (undefined :: e)]
         nodeRef = newURef $ Proc id $
                      UnzipNSY ts untup5 (unSignal s)
         untup5 :: Dynamic -> [Dynamic]
@@ -821,9 +822,9 @@ unzip6SY id s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1)),
                  Signal (newNodeOutSig nodeRef (UnzipNSYOut 4)),
                  Signal (newNodeOutSig nodeRef (UnzipNSYOut 5)),
                  Signal (newNodeOutSig nodeRef (UnzipNSYOut 6)))
-  where ts = [typeOf (undefined :: a), typeOf (undefined :: b),
-              typeOf (undefined :: c), typeOf (undefined :: d),
-              typeOf (undefined :: e), typeOf (undefined :: f)]
+  where ts = [fsdTypeOf (undefined :: a), fsdTypeOf (undefined :: b),
+              fsdTypeOf (undefined :: c), fsdTypeOf (undefined :: d),
+              fsdTypeOf (undefined :: e), fsdTypeOf (undefined :: f)]
         nodeRef = newURef $ Proc id $
                      UnzipNSY ts untup6 (unSignal s)
         untup6 :: Dynamic -> [Dynamic]
@@ -850,7 +851,7 @@ unzipxSY :: forall s a . (Typeable s, Nat s, ProcType a) =>
 unzipxSY id vs = V.map (\tag -> Signal (newNodeOutSig nodeRef tag) )
                         (reallyUnsafeVector [UnzipxSYOut i | i <- [1..n]])
   where n = toInt (undefined :: s)
-        t = typeOf (undefined :: a)
+        t = fsdTypeOf (undefined :: a)
         nodeRef = newURef $ Proc id $
                     UnzipxSY t n unvector (unSignal vs)
         unvector :: Dynamic -> [Dynamic]

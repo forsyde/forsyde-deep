@@ -36,14 +36,14 @@ import Control.Monad.State
 import Data.Typeable
 import Language.Haskell.TH hiding (Loc)
 import Language.Haskell.TH.LiftInstances ()
-
+import Data.Typeable.FSDTypeRepLib
 
 
 
 
 -- | Interface, describes the input or output ports of the system.
 --   Each entry contains the name of the port and its type.
-type Iface = [(PortId, TypeRep)]
+type Iface = [(PortId, FSDTypeRep)]
 
 
 -- | We add a phantom parameter to indicate the type of the system 

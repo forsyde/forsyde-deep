@@ -46,6 +46,7 @@ import Language.Haskell.TH.Syntax hiding (Loc)
 import Language.Haskell.TH.Ppr
 import Language.Haskell.TH.PprLib
 import Text.PrettyPrint.HughesPJ (render)
+import Data.Typeable.FSDTypeRepLib
 
 -------------
 -- ForSyDeErr
@@ -108,7 +109,7 @@ data ForSyDeErr =
   UntranslatableVHDLExp Exp VHDLExpErr       |
   -- Common Backend errors              
   -- | UnsUpported type
-  UnsupportedType TypeRep                    |
+  UnsupportedType FSDTypeRep                 |
   -- | Reserved identifier
   ReservedId String                          |
   -- | Unsupported process

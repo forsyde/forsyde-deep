@@ -86,6 +86,7 @@ Library
   other-modules:   Paths_ForSyDe_Deep,
                    Language.Haskell.TH.TypeLib,
                    Data.Typeable.TypeRepLib,
+                   Data.Typeable.FSDTypeRepLib,
                    Data.Traversable.GenericZipWith,
                    ForSyDe.Deep.Config,
                    ForSyDe.Deep.ForSyDeErr,

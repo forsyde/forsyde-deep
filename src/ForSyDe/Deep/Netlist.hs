@@ -31,6 +31,7 @@ import ForSyDe.Deep.ForSyDeErr
 import ForSyDe.Deep.Process.ProcVal (ProcVal(..))
 
 import Data.Dynamic
+import Data.Typeable.FSDTypeRepLib
 
 
 -----------
@@ -88,16 +89,16 @@ data NlProc inputi =
              [inputi]                               | 
  
  -- ^ Inverse of ZipWithNSY
- UnzipNSY [TypeRep] -- Type of the elements in the input tuple
-                    -- (type of outputs)
+ UnzipNSY [FSDTypeRep] -- Type of the elements in the input tuple
+                       -- (type of outputs)
           (Dynamic -> [Dynamic]) -- Dynamic version of the unzipping function
                                  -- for the concrete, monomorphic types
                                  -- of the process
           inputi                                    | 
  
  -- | Vector version of UnzipSY
- UnzipxSY TypeRep -- Type of elements in the input vector
-                  -- (and type of the outputs)
+ UnzipxSY FSDTypeRep -- Type of elements in the input vector
+                     -- (and type of the outputs)
           Int -- Size of output vector (Number of output signals)
           (Dynamic -> [Dynamic])             
           inputi                                    |  

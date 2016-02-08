@@ -18,13 +18,14 @@ module ForSyDe.Deep.Process.ProcVal where
 
 import ForSyDe.Deep.Process.ProcType
 
-import Data.Typeable (TypeRep, typeRep)
+import Data.Typeable (typeRep)
 import Data.Dynamic (toDyn, Dynamic)
 import Data.Set
 import Data.Proxy
 import Language.Haskell.TH (Exp, runQ)
 import Language.Haskell.TH.Syntax (Lift(..))
 import System.IO.Unsafe (unsafePerformIO)
+import Data.Typeable.FSDTypeRepLib (fsdTy, FSDTypeRep)
 
 
 data ProcVal = ProcVal 
@@ -33,7 +34,7 @@ data ProcVal = ProcVal
 
 data ProcValAST = ProcValAST
                     {expVal   :: Exp,           -- Its AST representation
-                     expTyp   :: TypeRep,       -- Type of the expression 
+                     expTyp   :: FSDTypeRep,       -- Type of the expression 
                      expEnums :: Set EnumAlgTy} -- Enumerated types associated
                                                 -- with the expression
 
@@ -46,5 +47,6 @@ mkProcVal val = ProcVal (toDyn val) (mkProcValAST val)
 mkProcValAST :: (Lift a, ProcType a) => a -> ProcValAST 
 -- FIMXE: the unsafePerformIO won't be needed once the Data a => Lift a
 --        instance is created
-mkProcValAST (val :: x) = ProcValAST (unsafePerformIO.runQ.lift $ val) (typeRep (Proxy :: Proxy x))
-                              (getEnums val)
+mkProcValAST (val :: x) = ProcValAST (unsafePerformIO.runQ.lift $ val) 
+                                     (fsdTy.typeRep $ (Proxy :: Proxy x))
+                                     (getEnums val)

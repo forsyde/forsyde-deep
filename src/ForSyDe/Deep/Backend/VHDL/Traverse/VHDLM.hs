@@ -31,6 +31,7 @@ import Data.Set (Set, union, empty, toList)
 import Control.Monad.State
 import Language.Haskell.TH (nameBase, nameModule, Name, Exp)
 import Data.Typeable (TypeRep,typeRepTyCon,tyConName,tyConPackage,tyConModule)
+import Data.Typeable.FSDTypeRepLib
 
 -------------------------------------
 -- How does the VHDL Backend work? --
@@ -191,8 +192,8 @@ data GlobalVHDLST = GlobalVHDLST
                                   -- algebraic types accumulated
                                   -- by all ProcFuns and ProcVals
                                   -- in the system
-   typeTable    :: [(TypeRep, TypeMark)],  -- Type translation table
-   transUnconsFSVecs :: [TypeRep]} -- Unconstrained FSVecs previously translated.
+   typeTable    :: [(FSDTypeRep, TypeMark)],  -- Type translation table
+   transUnconsFSVecs :: [FSDTypeRep]} -- Unconstrained FSVecs previously translated.
                                    -- Each unconstrained FSVec is represented by
                                    -- the 'TypeRep' of its elements
 
@@ -350,7 +351,7 @@ addStm sm = modify addFun
 
 
 -- | Find a previously translated custom type
-lookupCustomType :: TypeRep -> VHDLM (Maybe SimpleName)
+lookupCustomType :: FSDTypeRep -> VHDLM (Maybe SimpleName)
 lookupCustomType rep = do
  transTable <- gets (typeTable.global)
  let res = lookup rep transTable
@@ -394,7 +395,7 @@ getEnumConsId consName = do
 
 
 -- | Add a cutom type to the global results and type translation table
-addCustomType :: TypeRep -> Either TypeDec SubtypeDec -> VHDLM ()
+addCustomType :: FSDTypeRep -> Either TypeDec SubtypeDec -> VHDLM ()
 addCustomType rep eTD = do
  globalST <- gets global
  let transTable = typeTable globalST
@@ -440,7 +441,7 @@ addSubtypeDec std = do
 
 
 -- | Add an unconstrained FSVec to the global results
-addUnconsFSVec :: TypeRep -> VHDLM ()
+addUnconsFSVec :: FSDTypeRep -> VHDLM ()
 addUnconsFSVec trep = do
  globalST <- gets global
  -- FIXME: use queues

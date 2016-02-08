@@ -34,6 +34,7 @@ import ForSyDe.Deep.Netlist
 -- http://hackage.haskell.org/trac/ghc/ticket/1012
 import ForSyDe.Deep.System.SysDef()
 import ForSyDe.Deep.Process.ProcType (ProcType(..))
+import Data.Typeable.FSDTypeRepLib
 
 
 --   IMPORTANT NOTE: even if all ProcType constraints in SysFun and
@@ -53,7 +54,7 @@ instance (ProcType a, SysFun f) => SysFun (Signal a -> f) where
           case ids of
             [] -> applySysFun (f (Signal (newInPort "default"))) []
             (i:is) -> applySysFun (f (Signal (newInPort i))) is 
-        currInType = typeOf (undefined :: Signal a)
+        currInType = fsdTypeOf (undefined :: Signal a)
  fromListSysFun f accum s = fromListSysFun f ((unSignal s):accum)
 
 instance (ProcType a, SysFunToSimFun sysFun simFun) => 
