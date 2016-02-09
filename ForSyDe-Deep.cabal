@@ -61,8 +61,7 @@ Library
                    process,
                    directory,
                    filepath,
-                   random,
-                   array
+                   random
 
 
   hs-source-dirs:  src

@@ -18,7 +18,7 @@ module Data.Typeable.FSDTypeRepLib (
 import Data.Typeable
 import Data.Typeable.TypeRepLib
 import Data.Typeable.Internal
---import Language.Haskell.TH (Type)
+import Language.Haskell.TH (Type)
 import Language.Haskell.TH.TypeLib (type2TypeRep)
 
 newtype FSDTypeRep = FSDTypeRep' TypeRep deriving (Eq, Ord, Show)
