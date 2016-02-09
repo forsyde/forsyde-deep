@@ -45,7 +45,6 @@ import Data.Int (Int8, Int16, Int32, Int64)
 import System.IO (Handle)
 import Data.IORef (IORef)
 import Foreign (Ptr, FunPtr, StablePtr, ForeignPtr)
-import Data.Array (Array)
 --import Control.OldException (Exception,
 --                          AsyncException,
 --                          ArrayException,
@@ -238,7 +237,6 @@ type2TypeRep (ConT name)
             --(''ArithException , typeableCon (undefined :: ArithException) ),
             --(''ArrayException , typeableCon (undefined :: ArrayException) ),
             --(''AsyncException , typeableCon (undefined :: AsyncException) ),
-            (''Array          , typeableCon (undefined :: Array () ())    ),
             (''Ptr            , typeableCon (undefined :: Ptr ())         ),
             (''FunPtr         , typeableCon (undefined :: FunPtr ())      ),
             (''ForeignPtr     , typeableCon (undefined :: ForeignPtr ())  ),
