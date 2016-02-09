@@ -34,7 +34,7 @@ import Text.Regex.Posix ((=~))
 import qualified Language.Haskell.TH as TH (Exp)
 import Language.Haskell.TH
 import Text.ParserCombinators.ReadP (readP_to_S)
-
+import Data.Typeable.FSDTypeRepLib
 
 ---------------
 -- SysFun class
@@ -49,7 +49,7 @@ class SysFun f where
  --   as the id of the remaining ports.
  applySysFun :: f 
              -> [PortId] -- ^ ids used to build the input ports
-             -> ([NlSignal], [TypeRep], [TypeRep])
+             -> ([NlSignal], [FSDTypeRep], [FSDTypeRep])
                -- ^ (output signals returned by the system function,
                --    types of input ports, 
                --    types of output ports)
@@ -151,7 +151,7 @@ funOutInstances n = do
  --    Generate the output signal types for ApplyFun
  --    [typeOf o1, typeOf o2, ...., typeOf on]
      outTypeRepsApply =
-        listE $ map (\oName -> varE 'typeOf `appE` varE oName) outNames
+        listE $ map (\oName -> varE 'fsdTypeOf `appE` varE oName) outNames
  --    Generate the full output expression
      outEApply = [| ($outPrimSignalsApply, [], $outTypeRepsApply) |]
  --    Finally, the full declaration of applyFun 

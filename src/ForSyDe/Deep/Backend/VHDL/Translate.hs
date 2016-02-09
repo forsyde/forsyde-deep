@@ -30,9 +30,6 @@ import ForSyDe.Deep.Process.ProcFun
 import ForSyDe.Deep.Process.ProcVal
 import ForSyDe.Deep.Process.ProcType
 
-import Data.Typeable.TypeRepLib (unArrowT)
-import Language.Haskell.TH.TypeLib (type2TypeRep)
-
 import Data.Data (tyconUQname)
 import Data.Int
 import Data.Char (digitToInt)
@@ -44,11 +41,12 @@ import qualified Language.Haskell.TH as TH
 import Language.Haskell.TH hiding (global,Loc)
 import qualified Data.Traversable as DT
 import Data.Typeable
+import Data.Typeable.Internal
 import qualified Data.Param.FSVec as V
 import Text.Regex.Posix ((=~))
 
 import Data.TypeLevel.Num.Reps
-
+import Data.Typeable.FSDTypeRepLib
 
 -- enable tracing of type translation
 
@@ -140,7 +138,7 @@ transZipWithx2Block vPid ins loc ast out = do
 transUnzipNSY2Block :: Label -- ^ process identifier
                     -> VHDLId -- ^ input signal
                     -> [VHDLId] -- ^ output signals
-                    -> [TypeRep] -- ^ output signal types
+                    -> [FSDTypeRep] -- ^ output signal types
                     -> VHDLM (BlockSm, [SigDec])
 transUnzipNSY2Block vPid inSig outSigs outTRTypes = do
  -- Generate the formal parameters of the block
@@ -149,8 +147,7 @@ transUnzipNSY2Block vPid inSig outSigs outTRTypes = do
                    [1..length outSigs]
  -- Generate the port interface of the block
      nOuts = length outSigs
-     tupTyCon = mkTyCon3 "ghc-prim" "GHC.Tuple" $ '(':replicate (nOuts-1) ','++")"
-     inTRType = tupTyCon `mkTyConApp` outTRTypes
+     inTRType = (fsdTupleTyCon nOuts) `fsdTyConApp` outTRTypes
  outTMTypes <- mapM transTR2TM outTRTypes
  inTMType <- transTR2TM inTRType
  let inDec = IfaceSigDec inPar In inTMType
@@ -173,7 +170,7 @@ transUnzipNSY2Block vPid inSig outSigs outTRTypes = do
 transUnzipxSY2Block :: Label -- ^ process identifier
                     -> VHDLId -- ^ input signal
                     -> [VHDLId] -- ^ output signals
-                    -> TypeRep -- ^ type of vector elements
+                    -> FSDTypeRep -- ^ type of vector elements
                     -> Int -- ^ vector Size
                     -> VHDLM (BlockSm, [SigDec])
 transUnzipxSY2Block vPid inSig outSigs elemTR vSize = do
@@ -182,7 +179,7 @@ transUnzipxSY2Block vPid inSig outSigs elemTR vSize = do
      outPars = map (\n -> unsafeIdAppend vPid ("_out" ++ show n))
                    [1..length outSigs]
  -- Generate the port interface of the block
-     inTRType = fSVecTyCon `mkTyConApp` [transInt2TLNat vSize, elemTR]
+     inTRType = fSVecTyCon `fsdTyConApp` [transInt2TLNat vSize, elemTR]
  inTMType <- transTR2TM inTRType
  elemTM <- transTR2TM elemTR
  let inDec = IfaceSigDec inPar In inTMType
@@ -242,7 +239,7 @@ transDelay2Block vPid inS (ProcValAST exp tr enums) outS = do
 transSysIns2CompIns :: SysLogic -- ^ parent system logic
                     -> Label -- ^ instance identifier
                     -> [VHDLId] -- ^ input signals
-                    -> [(VHDLId, TypeRep)] -- ^ output signals
+                    -> [(VHDLId, FSDTypeRep)] -- ^ output signals
                     -> SysId -- ^ parent system identifier
                     -> [PortId] -- ^ parent input identifiers
                     -> [PortId] -- ^ parent output identifiers
@@ -268,7 +265,7 @@ transSysIns2CompIns logic vPid ins typedOuts parentId parentInIds parentOutIds =
 
 -- | Translate a VHDL Signal to a VHDL Signal declaration
 transVHDLName2SigDec ::  SimpleName -- ^ Signal name
-             -> TypeRep -- ^ Type of the intermediate signal
+             -> FSDTypeRep -- ^ Type of the intermediate signal
              -> Maybe TH.Exp -- ^ Maybe an initializer expression for the signal
              -> VHDLM SigDec
 transVHDLName2SigDec vId tr mExp = do
@@ -284,14 +281,14 @@ transVHDLName2SigDec vId tr mExp = do
 
 
 -- | Translate a VHDL identifier and a type to an interface signal declaration
-transVHDLId2IfaceSigDec :: Mode -> VHDLId -> TypeRep -> VHDLM IfaceSigDec
+transVHDLId2IfaceSigDec :: Mode -> VHDLId -> FSDTypeRep -> VHDLM IfaceSigDec
 transVHDLId2IfaceSigDec m vid trep = do
  tm  <- transTR2TM trep
  return $ IfaceSigDec vid m tm
 
 
 -- | Translate a Port to a VHDL Interface signal declaration
-transPort2IfaceSigDec :: Mode -> PortId -> TypeRep -> VHDLM IfaceSigDec
+transPort2IfaceSigDec :: Mode -> PortId -> FSDTypeRep -> VHDLM IfaceSigDec
 transPort2IfaceSigDec m pid trep = do
  sid <- transPortId2VHDL pid
  transVHDLId2IfaceSigDec m sid trep
@@ -326,7 +323,7 @@ transPortId2VHDL str = liftEProne $ mkVHDLExtId str
 -- | translate a 'TypeRep' to a VHDL 'TypeMark'
 -- We don't distinguish between a type and its version nested in 'Signal'
 -- since it makes no difference in VHDL
-transTR2TM :: TypeRep -> VHDLM TypeMark
+transTR2TM :: FSDTypeRep -> VHDLM TypeMark
 transTR2TM rep
  -- Is it a Signal?
  | isSignal = transTR2TM  nestedTR `debug` (dbgStr "S")
@@ -334,16 +331,15 @@ transTR2TM rep
  | isJust mPrimitiveTM = return $ fromJust mPrimitiveTM `debug` (dbgStr "P")
  -- Non-Primitive type, try to translate it
  | otherwise = customTR2TM rep `debug` (dbgStr "T")
- where (isSignal, nestedTR) = let (tc,~[tr]) = splitTyConApp rep
+ where (isSignal, nestedTR) = let (tc,~[tr]) = fsdSplitTyConApp rep
                               in  (tc == signalTyCon, tr)
-                              -- FIXME check above Eq of TypeRep for correctness
-       signalTyCon = (typeRepTyCon.typeOf) (undefined :: Signal ())
-       mPrimitiveTM = lookup (typeRepQName rep) primTypeTable
-       dbgStr k = ">>>>" ++ k ++ " " ++ (typeRepQName rep)
+       signalTyCon  = fsdTyConOf (undefined :: Signal ())
+       mPrimitiveTM = lookup rep primTypeTable
+       dbgStr k = ">>>>" ++ k ++ " " ++ (typeRepQName rep) ++ "/" ++ (show rep)
 
 
 -- | Translate a custom 'TypeRep' to a VHDL 'TypeMark'
-customTR2TM :: TypeRep -> VHDLM TypeMark
+customTR2TM :: FSDTypeRep -> VHDLM TypeMark
 customTR2TM rep = do
  -- Check if it was previously translated
  mTranslated <- lookupCustomType rep
@@ -359,10 +355,10 @@ customTR2TM rep = do
         Left (TypeDec id _) -> return id
         Right (SubtypeDec id _) -> return id
    -- Translated previously
-   Just tm -> return tm
+   Just tm -> return tm `debug` "'--> (cache hit)"
 
 -- | Really do the translation (customTR2TM deals with caching)
-doCustomTR2TM :: TypeRep -> VHDLM (Either TypeDec SubtypeDec)
+doCustomTR2TM :: FSDTypeRep -> VHDLM (Either TypeDec SubtypeDec)
 
 -- | FSVec?
 --   FSVecs are translated to subtypes of unconstrained vectors.
@@ -378,18 +374,18 @@ doCustomTR2TM rep | isFSVec = do
  --  * Check if the unconstrained array was previously translated
  vecs <- gets (transUnconsFSVecs.global)
  --  * if it wasn't ...
- when (not $ elem valueType vecs) $ do
+ when (not $ elem valueType vecs) `debug` (" vectors: " ++ (show vecs)) $ do
       -- create the unconstrained vector type and add it to the global
       -- results. _Only_ if we are not working with "FSVec _ Bit" becuase
       -- "type fsvec_std_logic" is already included in forsyde.vhd.
-      when (valueType /= typeOf (undefined :: Bit))
-           (addTypeDec $ TypeDec vectorId (TDA (UnconsArrayDef [fsvec_indexTM] valTM)))
+      when (valueType /= (fsdTy $ typeOf (undefined :: Bit)))
+           ((addTypeDec $ TypeDec vectorId (TDA (UnconsArrayDef [fsvec_indexTM] valTM))) `debug` "allegiedly not FSVec _ Bit")
       -- Add the default functions for the unconstrained
       -- vector type to the global results
       let funs =  genUnconsVectorFuns valTM vectorId
       mapM_ addSubProgBody funs
       -- Mark the unconstrained array as translated
-      addUnconsFSVec valueType
+      addUnconsFSVec $ valueType
 
  -- Create the vector subtype identifier
  let subvectorId = unsafeVHDLBasicId ("fsvec_" ++ show size ++ "_" ++
@@ -399,7 +395,7 @@ doCustomTR2TM rep | isFSVec = do
      SubtypeDec subvectorId (SubtypeIn vectorId
               (Just $ IndexConstraint [ToRange (PrimLit "0")
                                                (PrimLit (show $ size-1))]))
-   where (cons, ~[sizeType,valueType]) = splitTyConApp rep
+   where (cons, ~[sizeType,valueType]) = fsdSplitTyConApp rep
          isFSVec = cons == fSVecTyCon
          size = transTLNat2Int sizeType
 
@@ -419,8 +415,8 @@ doCustomTR2TM rep | isTuple = do
   mapM_ addSubProgBody funs
   -- Create the record
   return $ Left $ (TypeDec recordId (TDR $ RecordTypeDef elems))
- where (cons, args) = splitTyConApp rep
-       conStr = tyConName cons
+ where (cons, args) = fsdSplitTyConApp rep
+       conStr = fsdTyConName cons
        isTuple = (length conStr > 2) && (all (==',') (reverse.tail.reverse.tail $ conStr))
 
 
@@ -439,8 +435,8 @@ doCustomTR2TM rep | isAbsExt = do
   mapM_ addSubProgBody funs
   -- Return the resulting the record
   return $ Left $ (TypeDec recordId (TDR $ RecordTypeDef elems))
- where (cons, ~[valueTR]) = splitTyConApp rep
-       absExtTyCon = (typeRepTyCon.typeOf) (undefined :: AbstExt ())
+ where (cons, ~[valueTR]) = fsdSplitTyConApp rep
+       absExtTyCon = fsdTyConOf (undefined :: AbstExt ())
        isAbsExt = cons == absExtTyCon
 
 -- | Finally, it is an Enumerated algebraic type
@@ -477,15 +473,14 @@ enumAlg2TypeDec (EnumAlgTy tn cons) = do
  return (TypeDec tMark (TDE $ EnumTypeDef enumLits))
 
 -- | Translation table for primitive types
-primTypeTable :: [(String, TypeMark)]
-primTypeTable = map (\(tr,tm) -> (typeRepQName tr,tm)) [
-                 -- Commented out due to representation overflow
+primTypeTable :: [(FSDTypeRep, TypeMark)]
+primTypeTable = [-- Commented out due to representation overflow
                  -- (typeOf (undefined :: Int64), int64TM)   ,
-                 (typeOf (undefined :: Int32), int32TM)   ,
-                 (typeOf (undefined :: Int16), int16TM)   ,
-                 (typeOf (undefined :: Int8) , int8TM)    ,
-                 (typeOf (undefined :: Bool) , booleanTM) ,
-                 (typeOf (undefined :: Bit)  , std_logicTM)]
+                 (fsdTypeOf (undefined :: Int32), int32TM)   ,
+                 (fsdTypeOf (undefined :: Int16), int16TM)   ,
+                 (fsdTypeOf (undefined :: Int8) , int8TM)    ,
+                 (fsdTypeOf (undefined :: Bool) , booleanTM) ,
+                 (fsdTypeOf (undefined :: Bit)  , std_logicTM)]
 
 ---------------------------------------
 -- Translating functions and expresions
@@ -543,7 +538,7 @@ decs2ProcFuns decs = do
       return (v, t, n1, [Clause [] bdy ds] , xs)
    -- Otherwise the provided declaration block is not supported
    _ -> funErr $ UnsupportedDecBlock decs
- t' <- maybe (funErr $ PolyDec dec) return (type2TypeRep t)
+ t' <- maybe (funErr $ PolyDec dec) return (type2FSDTypeRep t)
  let tpf = TypedProcFunAST t' S.empty (ProcFunAST name clauses [])
  restTPFs <- decs2ProcFuns restDecs
  return $ tpf:restTPFs
@@ -570,7 +565,7 @@ transDecs decs = do
   addDecsToFunTransST bodyDecs
  where addDecName :: TypedProcFunAST -> VHDLM ()
        addDecName (TypedProcFunAST t _ (ProcFunAST n _ _)) = do
-          let arity = (length.fst.unArrowT) t
+          let arity = (length.fst.fsdUnArrowT) t
           vhdlId <- transTHName2VHDL n
           addTransNamePair n arity (genExprFCallN vhdlId arity)
        clearAux = do
@@ -605,7 +600,7 @@ checkProcFunAST (ProcFunAST _ [] _) =
 --    and its input patterns. This function also takes care of initalizing the
 --    translation namespace.
 transProcFunSpec :: TH.Name -- ^ Function name
-                 -> TypeRep -- ^ Function type
+                 -> FSDTypeRep -- ^ Function type
                  -> [Pat]   -- ^ input patterns
                  -> VHDLM (SubProgSpec, VHDLId, [VHDLId], [TypeMark], TypeMark)
 -- ^ translated function spec, function name, inpt parameters, input types
@@ -613,10 +608,10 @@ transProcFunSpec :: TH.Name -- ^ Function name
 transProcFunSpec fName fType fPats = do
  -- FIXME: translate the default arguments!
  -- Get the input and output types
- let (argsTR, retTR) = unArrowT fType
+ let (argsTR, retTR) = fsdUnArrowT fType
  -- Check that the number of patterns equal the function parameter number
-     expectedN = length argsTR
-     actualN = length fPats
+     expectedN = length argsTR `debug` ("expected (args): "++ (show (length argsTR)))
+     actualN = length fPats `debug` ("actual (patterns): "++ (show (length fPats)))
  when (expectedN /= actualN) (funErr $ InsParamNum fName actualN)
  -- Get a VHDL identifier for each input pattern and
  -- initialize the translation namespace
@@ -864,44 +859,44 @@ transInteger2VHDL = PrimLit . show
 
 -- Translate the TypeRep of a type-level natural (e.g: D1 :* D2) to a number
 -- Make sure you don't supply an incorrect TypeRep or the function will break
-transTLNat2Int :: TypeRep -> Int
+transTLNat2Int :: FSDTypeRep -> Int
 transTLNat2Int tr
   -- Digit
   -- FIXME: Could be made cleaner. It was like this before:
   -- isDigit = (digitToInt.last.tyConName) cons
   -- which was not able to take care of e.g. Data.TypeLevel.Num.Aliases.D10
-  | isDigit = (read.reverse.takeWhile (/='D').reverse.tyConName) cons
+  | isDigit = (read.reverse.takeWhile (/='D').reverse.fsdTyConName) cons
   -- Connective
   | otherwise = 10 * (transTLNat2Int prefix) + (transTLNat2Int lastDigit)
- where (cons, args@(~[prefix, lastDigit])) = splitTyConApp tr
+ where (cons, args@(~[prefix, lastDigit])) = fsdSplitTyConApp tr
        isDigit = null args
 
 
--- Tranlate an Into to the TypeRep of a type-level natural (e.g: D1 :* D2)
-transInt2TLNat :: Int -> TypeRep
+-- Tranlate an Int to the TypeRep of a type-level natural (e.g: D1 :* D2)
+transInt2TLNat :: Int -> FSDTypeRep
 transInt2TLNat n
  | n < 0 = intError fName (Other "negative index")
  | n < 10 = digit n
- | otherwise = mkTyConApp conTyCon [transInt2TLNat suffix, digit last]
+ | otherwise = fsdTyConApp conTyCon [transInt2TLNat suffix, digit last]
  where fName = "ForSyDe.Backend.VHDL.Translate.transInt2TLNat"
        (suffix, last) = n `divMod` 10
-       digit 0 = typeOf (undefined :: D0)
-       digit 1 = typeOf (undefined :: D1)
-       digit 2 = typeOf (undefined :: D2)
-       digit 3 = typeOf (undefined :: D3)
-       digit 4 = typeOf (undefined :: D4)
-       digit 5 = typeOf (undefined :: D5)
-       digit 6 = typeOf (undefined :: D6)
-       digit 7 = typeOf (undefined :: D7)
-       digit 8 = typeOf (undefined :: D8)
-       digit 9 = typeOf (undefined :: D9)
+       digit 0 = fsdTypeOf (undefined :: D0)
+       digit 1 = fsdTypeOf (undefined :: D1)
+       digit 2 = fsdTypeOf (undefined :: D2)
+       digit 3 = fsdTypeOf (undefined :: D3)
+       digit 4 = fsdTypeOf (undefined :: D4)
+       digit 5 = fsdTypeOf (undefined :: D5)
+       digit 6 = fsdTypeOf (undefined :: D6)
+       digit 7 = fsdTypeOf (undefined :: D7)
+       digit 8 = fsdTypeOf (undefined :: D8)
+       digit 9 = fsdTypeOf (undefined :: D9)
        -- Just to hush the compiler warnings
        digit _ = undefined
-       conTyCon = (typeRepTyCon.typeOf) (undefined :: () :* ())
+       conTyCon = fsdTyConOf (undefined :: () :* ())
 
 -- Type constructor of FSVec
-fSVecTyCon :: TyCon
-fSVecTyCon =(typeRepTyCon.typeOf) (undefined :: V.FSVec () ())
+fSVecTyCon :: FSDTypeCon
+fSVecTyCon = fsdTyConOf (undefined :: V.FSVec () ())
 
 -- unApply an expression and obtain the number of arguments found
 unApp :: Exp -> (Exp, [Exp], Int)
@@ -910,9 +905,12 @@ unApp e = (first, rest, n)
        unAppAc (xs,n) (f `AppE` arg) = unAppAc (arg:xs, n+1) f
        unAppAc (xs,n) f = (f:xs,n)
 
-typeRepQName :: TypeRep -> String
-typeRepQName tr = mod ++ dot ++ name
- where  tc      = typeRepTyCon tr
-        mod     = tyConModule tc
-        name    = tyConName tc
-        dot     = if mod=="" then "" else "."
+
+
+typeRepQName :: FSDTypeRep -> String
+typeRepQName rep = mod ++ dot ++ name
+ where  tr       = fsdTyRep rep
+        tc       = typeRepTyCon tr
+        mod      = tyConModule tc
+        name     = tyConName tc
+        dot      = if mod=="" then "" else "."

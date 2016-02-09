@@ -7,9 +7,9 @@ module ForSyDe.Deep.System.SysDef where
 
 import ForSyDe.Deep.OSharing
 import ForSyDe.Deep.Ids
-import Data.Typeable (TypeRep)
+import Data.Typeable.FSDTypeRepLib
 
-type Iface = [(PortId, TypeRep)]
+type Iface = [(PortId, FSDTypeRep)]
 
 type role SysDef phantom
 newtype SysDef a = SysDef {unSysDef :: PrimSysDef}

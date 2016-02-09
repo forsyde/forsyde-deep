@@ -35,6 +35,8 @@ import Language.Haskell.TH.LiftInstances ()
 import Data.Dynamic
 import Data.Maybe (fromJust)
 import Data.Set (Set)
+import Data.Typeable.FSDTypeRepLib (FSDTypeRep, FSDType, fsdTy)
+
 -----------
 -- ProcFun
 -----------
@@ -125,7 +127,7 @@ data TypedProcFun a =
 --     going to be used. Thus it is imposible to guess the TypeRep within
 --     the code of newProcFun.
 data TypedProcFunAST = 
-     TypedProcFunAST {tptyp   :: TypeRep,        -- function type
+     TypedProcFunAST {tptyp   :: FSDTypeRep,     -- function type
                       tpEnums :: Set EnumAlgTy,  -- enumerated types associated 
                                                  -- with the function
                       tpast   :: ProcFunAST}
@@ -133,7 +135,7 @@ data TypedProcFunAST =
 -- | transform a ProcFun into a Dynamic TypedProcFun
 procFun2Dyn :: Typeable a => Set EnumAlgTy -> ProcFun a -> TypedProcFun Dynamic
 procFun2Dyn s (ProcFun v l a) = 
-  TypedProcFun (toDyn v) l (TypedProcFunAST (typeOf v) s a)
+  TypedProcFun (toDyn v) l (TypedProcFunAST (fsdTy (typeOf v)) s a)
 
 -- FIXME: probably not needed
 -- | tranform the arguments and return value of
@@ -146,7 +148,7 @@ contProcFun2Dyn :: (Typeable1 container,
                    ProcFun (container a -> b) -> 
                    TypedProcFun (container Dynamic -> Dynamic)
 contProcFun2Dyn s (ProcFun v l a) = 
-     TypedProcFun (fmapDyn v) l (TypedProcFunAST (typeOf v) s a)
+     TypedProcFun (fmapDyn v) l (TypedProcFunAST (fsdTy (typeOf v)) s a)
        where  fmapDyn f cont = toDyn (f (fmap (fromJust.fromDynamic) cont)) 
 
 
