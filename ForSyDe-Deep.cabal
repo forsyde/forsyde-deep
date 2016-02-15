@@ -115,6 +115,7 @@ Library
                    ForSyDe.Deep.Backend.VHDL.TestBench,
                    ForSyDe.Deep.Backend.VHDL.Quartus,
                    ForSyDe.Deep.Backend.VHDL.Modelsim,
+                   ForSyDe.Deep.Backend.VHDL.Ghdl,
                    ForSyDe.Deep.Backend.GraphML.AST,
                    ForSyDe.Deep.Backend.GraphML.Ppr,
                    ForSyDe.Deep.Backend.GraphML.FileIO,
