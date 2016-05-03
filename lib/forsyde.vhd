@@ -43,6 +43,8 @@ package types is
   function fromBitVector8 (v : fsvec_std_logic) return int8; 
   function fromBitVector16 (v : fsvec_std_logic) return int16;
   function fromBitVector32 (v : fsvec_std_logic) return int32;
+
+  function fixmul8 (a : int8; b: int8) return int8;
   
 end types;
 
@@ -53,6 +55,14 @@ package body types is
 --  begin 
 --   return 0;
 --  end default;
+  function fixmul8 (a : int8; b: int8) return int8 is
+    variable res : int16;
+    variable result_signed : signed (0 to 15);
+  begin
+        res := a * b;
+        result_signed := to_signed (res, 16);
+        return to_integer(result_signed (8 to 15));
+  end fixmul8;
 
   function default return integer is
   begin 

@@ -77,6 +77,7 @@ globalNameTable = [
   ('V.shiftr        , (2, genExprFCall2L shiftrId                        ) ),
   ('V.copy          , (2, genExprFCall2L copyId                          ) ),
   ('fromAbstExt     , (2, genExprFCall2L fromAbstExtId                   ) ),
+  ('fixmul8         , (2, genExprFCall2L fixmul8Id                       ) ),
 -- unary functions
   ('B.not           , (1, genUnOpCall Not                                ) ),
   ('not             , (1, genUnOpCall Not                                ) ),

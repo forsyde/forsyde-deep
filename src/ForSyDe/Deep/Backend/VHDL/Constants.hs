@@ -238,6 +238,10 @@ fromBitVector16Id = unsafeVHDLBasicId "fromBitVector16"
 fromBitVector32Id :: VHDLId
 fromBitVector32Id = unsafeVHDLBasicId "fromBitVector32"
 
+-- | fixmul8 function identifier
+fixmul8Id :: VHDLId
+fixmul8Id = unsafeVHDLBasicId "fixmul8"
+
 
 
 -- | copy function identifier

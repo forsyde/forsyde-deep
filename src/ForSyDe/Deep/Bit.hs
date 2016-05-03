@@ -24,7 +24,8 @@ module ForSyDe.Deep.Bit (Bit(..),
                     toBitVector32,
                     fromBitVector32,
                     toBitVector64,
-                    fromBitVector64) where
+                    fromBitVector64,
+                    fixmul8) where
 
 import Language.Haskell.TH.Lift
 import Data.Int
@@ -114,6 +115,11 @@ toBitVector64 = reallyUnsafeToBitVector
   
 fromBitVector64 :: FSVec D64 Bit -> Int64
 fromBitVector64 = fromBitVectorDef 0
+
+
+fixmul8 :: Int8 -> Int8 -> Int8
+fixmul8 a b = fromIntegral $ (fromIntegral a * fromIntegral b::Int16) `div` 128
+
 
 
 {- This would have been much more convenient
