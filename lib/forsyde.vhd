@@ -57,9 +57,13 @@ package body types is
 --  end default;
   function fixmul8 (a : int8; b: int8) return int8 is
     variable res : int16;
+    variable a16 : int16;
+    variable b16 : int16;
     variable result_signed : signed (0 to 15);
   begin
-        res := a * b;
+        a16 := a;
+        b16 := b;
+        res := a16 * b16;
         result_signed := to_signed (res, 16);
         return to_integer(result_signed (8 to 15));
   end fixmul8;
