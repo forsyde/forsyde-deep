@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 -- |
--- Module      :  ForSyDe.Deep.Backend.VHDL.Modelsim
+-- Module      :  ForSyDe.Deep.Backend.VHDL.Ghdl
 -- Copyright   :  (c) ES Group, KTH/ICT/ES 2007-2013
 -- License     :  BSD-style (see the file LICENSE)
 -- 
@@ -8,10 +8,10 @@
 -- Stability   :  experimental
 -- Portability :  portable
 --
--- Functions to process the VHDL compilation results with Modelsim.
+-- Functions to process the VHDL compilation results with GHDL.
 -----------------------------------------------------------------------------
-module ForSyDe.Deep.Backend.VHDL.Modelsim (compileResultsGhdl,
-                                      executeTestBenchGhdl) where
+module ForSyDe.Deep.Backend.VHDL.Ghdl (compileResultsGhdl,
+                                       executeTestBenchGhdl) where
 
 import ForSyDe.Deep.Backend.VHDL.Traverse.VHDLM
 import ForSyDe.Deep.Backend.VHDL.TestBench
@@ -34,7 +34,7 @@ import System.IO
 import System.FilePath ((</>))
 import qualified Language.Haskell.TH as TH (Exp)
 
--- | Generate a testbench and execute it with Modelsim
+-- | Generate a testbench and execute it with GHDL
 --   (Note: the initial and final CWD will be / )
 executeTestBenchGhdl :: Maybe Int -- ^ Number of cycles to simulate          
                          -> [[TH.Exp]] -- ^ input stimuli, each signal value
@@ -43,9 +43,9 @@ executeTestBenchGhdl :: Maybe Int -- ^ Number of cycles to simulate
                          -> VHDLM [[String]] -- ^ results, each signal value
                                              --   is expressed as a string
 executeTestBenchGhdl mCycles stimuli = do
- -- Check if modelsim is installed
+ -- Check if GHDL is installed
  installed <- liftIO $ isGhdlInstalled
- when (not installed) (throwFError ModelsimFailed) 
+ when (not installed) (throwFError GhdlFailed) 
  
  -- compile testbench
  cycles <- writeVHDLTestBench mCycles stimuli
@@ -67,17 +67,20 @@ executeTestBenchGhdl mCycles stimuli = do
      forsydeLibDir = "forsyde"</>"ghdl"
      systemLibDir  =  syslib  </>"ghdl"
      workDir       = "work"   </>"ghdl"
+     tbExecutable  = workDir  </>sysTb
      paths = [forsydeLibDir, systemLibDir, workDir]
  tmpdir <- liftIO getTemporaryDirectory 
  (file, handle) <- liftIO $ openTempFile tmpdir "tb_out.txt"
  -- we close the temporal file to avoid opening problems with vsim on windows
  liftIO $ hClose handle 
 
- liftIO $ mapM (createDirectoryIfMissing True) paths
+ _ <- liftIO $ mapM (createDirectoryIfMissing True) paths
 
- runGhdlCommand Analyze "forsyde" forsydeLibDir [] [dataPath</>"forsyde.vhd"] []
+ runGhdlCommand Analyze "forsyde" forsydeLibDir [] [dataPath</>"lib"</>"forsyde.vhd"] []
  runGhdlCommand Analyze syslib systemLibDir [forsydeLibDir] [libFile] []
- runGhdlCompile sysTb workDir [forsydeLibDir, systemLibDir] workFiles
+ runGhdlCompile sysTb workDir [forsydeLibDir, systemLibDir] $ tbFile:workFiles
+ -- TODO: run test bench with "tb_out.txt" as output file
+ runGhdlCommand Run sysTb workDir [forsydeLibDir, systemLibDir] [] ["--stop-time="++(show $ cycles*10)++"ns"]
 
  handle2 <- liftIO $ openFile file ReadMode
  flatOut <- liftIO $ hGetContents handle2
@@ -90,9 +93,9 @@ executeTestBenchGhdl mCycles stimuli = do
 --   (Note: the initial and final CWD will be /systemName/vhdl )
 compileResultsGhdl :: VHDLM ()
 compileResultsGhdl = do
- -- Check if modelsim is installed
+ -- Check if Ghdl is installed
  installed <- liftIO $ isGhdlInstalled
- when (not installed) (throwFError ModelsimFailed) 
+ when (not installed) (throwFError GhdlFailed) 
  -- get the name of the vhdl files to compile
  sys <- gets (globalSysDef.global)
  dataPath <- liftIO $ getDataDir
@@ -107,24 +110,24 @@ compileResultsGhdl = do
      workDir       = "work"   </>"ghdl"
      paths = [forsydeLibDir, systemLibDir, workDir]
 
- liftIO $ mapM (createDirectoryIfMissing True) paths
+ _ <- liftIO $ mapM (createDirectoryIfMissing True) paths
 
  runGhdlCommand Analyze "forsyde" forsydeLibDir [] [dataPath</>"forsyde.vhd"] []
  runGhdlCommand Analyze syslib systemLibDir [forsydeLibDir] [libFile] []
  runGhdlCommand Analyze "work" workDir [forsydeLibDir, systemLibDir] workFiles []
 
-
-
-data GhdlCommand = Analyze | Elaborate | Compile | Import deriving Eq
+data GhdlCommand = Analyze | Elaborate | Compile | Import | Run deriving Eq
 instance Show GhdlCommand where
     show Analyze   = "-a"
     show Elaborate = "-e"
     show Compile   = "-c"
     show Import    = "-i"
+    show Run       = "-r"
+
 type Path = String
 
 runGhdlCompile :: String -> Path -> [Path] -> [Path] -> VHDLM ()
-runGhdlCompile toplevel workdir libPaths files
+runGhdlCompile toplevel workdir libPaths files = 
   runGhdlCommand Compile "work" workdir libPaths files extra
     where
       extra = [show Elaborate,
@@ -143,13 +146,13 @@ runGhdlCommand command libName workdir libPaths files extraOpts = do
                "--workdir="++workdir]
 
 
--- | run a ModelSim command
+-- | run a shell command
 runCommand :: String -- ^ Command to execute 
               -> [String] -- ^ Command arguments
               -> VHDLM ()
 runCommand command args = do
   success <- liftIO $ runWait msg command args
-  when (not success) (throwFError ModelsimFailed)
+  when (not success) (throwFError GhdlFailed)
  where msg = "Running: " ++ command ++ " " ++ (concat $ intersperse " " args)
 
 
@@ -166,7 +169,7 @@ runWait msg proc args = do
            return $ code == ExitSuccess 
 
 
--- Look for modelsim executables
+-- Look for GHDL executables
 isGhdlInstalled :: IO Bool
 isGhdlInstalled =  executablePresent "ghdl"
  where executablePresent = (liftM (maybe False (\_-> True))) .findExecutable

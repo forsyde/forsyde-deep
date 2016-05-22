@@ -116,6 +116,8 @@ data ForSyDeErr =
   UnsupportedProc                            |
   -- | Quartus Failed
   QuartusFailed                              |
+  -- | Ghdl Failed
+  GhdlFailed                                 |
   -- | Modelsim Failed
   ModelsimFailed                             |
 
