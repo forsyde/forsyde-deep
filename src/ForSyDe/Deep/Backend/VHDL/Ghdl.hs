@@ -10,8 +10,7 @@
 --
 -- Functions to process the VHDL compilation results with GHDL.
 -----------------------------------------------------------------------------
-module ForSyDe.Deep.Backend.VHDL.Ghdl (compileResultsGhdl,
-                                       executeTestBenchGhdl) where
+module ForSyDe.Deep.Backend.VHDL.Ghdl (executeTestBenchGhdl) where
 
 import ForSyDe.Deep.Backend.VHDL.Traverse.VHDLM
 import ForSyDe.Deep.Backend.VHDL.TestBench
@@ -21,9 +20,7 @@ import ForSyDe.Deep.OSharing
 import ForSyDe.Deep.ForSyDeErr
 import ForSyDe.Deep.Config (getDataDir)
 
-import Data.List (intersperse)
 import Data.Maybe (isJust)
-import Control.Monad (liftM, when)
 import Control.Monad.State (gets)
 import System.Directory (findExecutable,
                          setCurrentDirectory,
@@ -36,6 +33,7 @@ import System.FilePath ((</>))
 import qualified Language.Haskell.TH as TH (Exp)
 
 data GhdlCommand = Analyze | Elaborate | Compile | Import | Run deriving Eq
+
 instance Show GhdlCommand where
     show Analyze   = "-a"
     show Elaborate = "-e"
@@ -43,22 +41,21 @@ instance Show GhdlCommand where
     show Import    = "-i"
     show Run       = "-r"
 
-type Path = String
-
 data GhdlEnv =  GhdlEnv { sysId           :: String
                         , sysTb           :: String
                         , syslib          :: String
-                        , tbFile          :: Path
-                        , tbExecutable    :: Path
-                        , libFile         :: Path
-                        , workFiles       :: [Path]
-                        , forsydeLibFile  :: Path
-                        , forsydeLibDir   :: Path
-                        , systemLibDir    :: Path
-                        , workDir         :: Path
-                        , paths           :: [Path]
+                        , tbFile          :: FilePath
+                        , tbExecutable    :: FilePath
+                        , libFile         :: FilePath
+                        , workFiles       :: [FilePath]
+                        , forsydeLibFile  :: FilePath
+                        , forsydeLibDir   :: FilePath
+                        , systemLibDir    :: FilePath
+                        , workDir         :: FilePath
+                        , paths           :: [FilePath]
                         }
 
+mkGhdlEnv :: SysDefVal -> FilePath -> GhdlEnv
 mkGhdlEnv sys osDataPath = 
     GhdlEnv
       { sysId     = sysId
@@ -121,27 +118,25 @@ executeTestBenchGhdl mCycles stimuli = do
                         (forsydeLibDir env) 
                         [] 
                         [forsydeLibFile env] 
-                        []
 
  -- analyze the generated system library
  runGhdlCommand Analyze (syslib env) 
                         (systemLibDir env) 
                         [forsydeLibDir env] 
                         [libFile env] 
-                        []
 
  -- compile test bench hierarchy
  runGhdlCompile (sysTb env)
                 (workDir env) 
                 [forsydeLibDir env, systemLibDir env] 
-                tbFile env:workFiles env
+                (tbFile env:workFiles env)
 
  -- TODO: run test bench with "tb_out.txt" as output file
- runGhdlCommand Run (sysTb env) 
-                    (workDir env) 
-                    [forsydeLibDir, systemLibDir] 
-                    [] 
-                    ["--stop-time="++show (cycles*10)++"ns"]
+ runGhdlCommand' Run (sysTb env) 
+                     (workDir env) 
+                     [forsydeLibDir env, systemLibDir env] 
+                     [] 
+                     ["--stop-time="++show (cycles*10)++"ns"]
 
  -- read test output data
  testOutput <- liftIO $ do 
@@ -154,18 +149,25 @@ executeTestBenchGhdl mCycles stimuli = do
  parseTestBenchOut testOutput
 
 
-runGhdlCompile :: String -> Path -> [Path] -> [Path] -> VHDLM ()
+runGhdlCompile :: String -> FilePath -> [FilePath] -> [FilePath] -> VHDLM ()
 runGhdlCompile toplevel workdir libPaths files = 
-  runGhdlCommand Compile "work" workdir libPaths files extra
+  runGhdlCommand' Compile "work" workdir libPaths files extra
     where
       extra = [show Elaborate,
                toplevel]
 
+
 runGhdlCommand :: GhdlCommand 
-                -> String -> Path -> [Path] -> [Path] 
+                -> String -> FilePath -> [FilePath] -> [FilePath] 
+                -> VHDLM ()
+runGhdlCommand cmd lib work paths files = 
+        runGhdlCommand' cmd lib work paths files []
+
+runGhdlCommand' :: GhdlCommand 
+                -> String -> FilePath -> [FilePath] -> [FilePath] 
                 -> [String] 
                 -> VHDLM ()
-runGhdlCommand command libName workdir libPaths files extraOpts =
+runGhdlCommand' command libName workdir libPaths files extraOpts =
   runCommand "ghdl" $ cmd ++ paths ++ opts ++ files ++ extraOpts
     where
       cmd   = [show command]
