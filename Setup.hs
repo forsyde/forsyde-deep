@@ -13,15 +13,8 @@ import System.Directory
 import System.FilePath
 
 main :: IO ()
-main = defaultMainWithHooks simpleUserHooks{runTests=forsydeTests,
-                                            postInst=forsydePostInst,
+main = defaultMainWithHooks simpleUserHooks{postInst=forsydePostInst,
                                             postCopy=forsydePostCopy}
-
-forsydeTests :: Args -> Bool -> PackageDescription -> LocalBuildInfo -> IO ()
-forsydeTests _ _ _ _ = do 
-  e <- runCommandMsg "runghc" 
-              ["-itests/properties", "-iexamples", "tests/properties/Main.hs"] 
-  when (not e) exitFailure
 
 forsydePostInst :: Args -> InstallFlags -> PackageDescription -> 
                    LocalBuildInfo -> IO () 

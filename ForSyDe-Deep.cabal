@@ -1,6 +1,6 @@
 name:           ForSyDe-Deep
 version:        0.2.0
-cabal-version:  >= 1.6
+cabal-version:  >= 1.9.2
 build-type:     Custom
 license:        BSD3
 license-file:   LICENSE
@@ -46,9 +46,23 @@ extra-source-files: LICENSE,
                     src/ForSyDe/Deep/Backend/VHDL/GlobalNameTable.hs-boot,
                     src/ForSyDe/Deep/System/SysDef.hs-boot
 
+
 Flag developer
   Description: Shorten build time for more fluent development
   Default:     False
+
+Test-Suite examples
+  type:       exitcode-stdio-1.0
+  main-is:    Main.hs
+  hs-source-dirs:  tests/properties,
+                   examples/
+  build-depends:   base>=4 && <6,
+                   parameterized-data >= 0.1.5,
+                   type-level,
+                   ForSyDe-Deep,
+                   HUnit,
+                   random,
+                   syb
 
 Library
   build-depends:   type-level,
