@@ -26,7 +26,7 @@ import System.Directory (findExecutable,
                          setCurrentDirectory,
                          getTemporaryDirectory,
                          createDirectoryIfMissing)
-import System.Process (runProcess, waitForProcess)
+import System.Process (readProcessWithExitCode, readProcess, runProcess, waitForProcess)
 import System.Exit (ExitCode(..))
 import System.IO 
 import System.FilePath ((</>))
@@ -114,44 +114,32 @@ executeTestBenchGhdl mCycles stimuli = do
         return file
 
  -- analyze the installed forsyde library
- runGhdlCommand Analyze "forsyde" 
-                        (forsydeLibDir env) 
-                        [] 
-                        [forsydeLibFile env] 
+ runGhdlCommand Analyze "forsyde"               -- library (toplevel)
+                        (forsydeLibDir env)     -- workdir
+                        []                      -- include paths
+                        [forsydeLibFile env]    -- files
 
  -- analyze the generated system library
- runGhdlCommand Analyze (syslib env) 
-                        (systemLibDir env) 
-                        [forsydeLibDir env] 
-                        [libFile env] 
+ runGhdlCommand Analyze (syslib env)            -- library (toplevel)
+                        (systemLibDir env)      -- workdir
+                        [forsydeLibDir env]     -- include paths
+                        [libFile env]           -- files
 
  -- compile test bench hierarchy
- runGhdlCompile (sysTb env)
-                (workDir env) 
-                [forsydeLibDir env, systemLibDir env] 
-                (tbFile env:workFiles env)
+ runGhdlCompile (sysTb env)                             -- toplevel
+                (workDir env)                           -- workdir
+                [forsydeLibDir env, systemLibDir env]   -- include paths
+                (tbFile env:workFiles env)              -- files
 
- -- TODO: run test bench with "tb_out.txt" as output file
- runGhdlCommand' Run (sysTb env) 
-                     (workDir env) 
-                     [forsydeLibDir env, systemLibDir env] 
-                     [] 
-                     ["--stop-time="++show (cycles*10)++"ns"]
+ -- Run simulation and capture output
+ testOutput <- runGhdlSim (sysTb env) cycles
 
- -- read test output data
- testOutput <- liftIO $ do 
-         handle <- openFile file ReadMode
-         output <- hGetContents handle
-         -- go back to the original directory
-         setCurrentDirectory (".." </> "..")
-         return output
-
+ liftIO $ setCurrentDirectory (".." </> "..")
  parseTestBenchOut testOutput
-
 
 runGhdlCompile :: String -> FilePath -> [FilePath] -> [FilePath] -> VHDLM ()
 runGhdlCompile toplevel workdir libPaths files = 
-  runGhdlCommand' Compile "work" workdir libPaths files extra
+  runGhdlCommandInWorkdir Compile "work" workdir libPaths files extra
     where
       extra = [show Elaborate,
                toplevel]
@@ -161,19 +149,32 @@ runGhdlCommand :: GhdlCommand
                 -> String -> FilePath -> [FilePath] -> [FilePath] 
                 -> VHDLM ()
 runGhdlCommand cmd lib work paths files = 
-        runGhdlCommand' cmd lib work paths files []
+        runGhdlCommandInWorkdir cmd lib work paths files []
 
-runGhdlCommand' :: GhdlCommand 
+runGhdlCommandInWorkdir :: GhdlCommand 
                 -> String -> FilePath -> [FilePath] -> [FilePath] 
                 -> [String] 
                 -> VHDLM ()
-runGhdlCommand' command libName workdir libPaths files extraOpts =
+runGhdlCommandInWorkdir command libName workdir libPaths files extraOpts =
   runCommand "ghdl" $ cmd ++ paths ++ opts ++ files ++ extraOpts
     where
       cmd   = [show command]
       paths = map ("-P"++) libPaths
       opts  = ["--work="++libName, 
                "--workdir="++workdir]
+
+runGhdlSim :: String -> Int -> VHDLM String
+runGhdlSim toplevel cycles = do
+    (output,success) <- liftIO $ do 
+          putStrLn $ "Running: ghdl " ++ unwords args
+          (exitcode,stdout,stderr) <- readProcessWithExitCode "ghdl" args stdin
+          let success = exitcode == ExitSuccess
+          return (stdout,success)
+    unless success (throwFError GhdlFailed)
+    return output
+  where
+    stdin = ""
+    args = [show Run, toplevel, "--stop-time="++show (cycles*10)++"ns"]
 
 
 -- | run a shell command
