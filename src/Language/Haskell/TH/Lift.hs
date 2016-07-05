@@ -56,7 +56,7 @@ deriveLift :: Name -> Q Dec
 deriveLift n
  = do i <- reify n
       case i of
-          TyConI (DataD dcxt _ vs cons _) ->
+          TyConI (DataD dcxt _ vs _ cons _) ->
               let ctxt = liftM (++ dcxt) $ 
                          cxt [appT (conT ''Lift) (varT v') | v' <- vs']
                   typ = foldl appT (conT n) $ map varT vs'

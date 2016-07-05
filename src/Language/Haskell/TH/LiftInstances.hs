@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell #-}  
+{-# LANGUAGE TemplateHaskell,CPP #-}  
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Language.Haskell.TH.LiftInstances
@@ -22,7 +22,20 @@ import Language.Haskell.TH.Lift (deriveLift)
 
 import Language.Haskell.TH.Syntax
  (Guard,
+#if __GLASGOW_HASKELL__ >= 800
+  -- Strict was replaced and became a synonym for Bang in GHC 8.0.1
+  Bang,
+  Overlap,
+  SourceUnpackedness,
+  SourceStrictness,
+  DecidedStrictness,
+  TypeFamilyHead,
+  InjectivityAnn,
+  FamilyResultSig,
+#else
+  -- This is only for backwards compatibility with ghc 7.10.
   Strict,
+#endif
   Callconv,
   Safety,
   Body, 
@@ -60,7 +73,21 @@ import Language.Haskell.TH.Syntax
 
 $(mapM deriveLift 
       [''Guard,
+#if __GLASGOW_HASKELL__ >= 800
+       -- Strict was replaced and became a synonym (for which we don't need any
+       -- lift instances) for Bang in GHC 8.0.1
+       ''Bang,
+       ''Overlap,
+       ''SourceUnpackedness,
+       ''SourceStrictness,
+       ''DecidedStrictness,
+       ''TypeFamilyHead,
+       ''InjectivityAnn,
+       ''FamilyResultSig,
+#else
+       -- This is only for backwards compatibility with ghc 7.10.
        ''Strict,
+#endif
        ''Callconv,
        ''Safety,
        ''Body, 

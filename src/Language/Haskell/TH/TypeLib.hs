@@ -39,7 +39,6 @@ import Text.Regex.Posix ((=~))
 import Data.Maybe(isJust, fromMaybe)
 
 -- Due to type translations
-import GHC.Exts (RealWorld)
 import Data.Word (Word, Word8, Word16, Word32, Word64)
 import Data.Int (Int8, Int16, Int32, Int64)
 import System.IO (Handle)
@@ -260,8 +259,7 @@ type2TypeRep (ConT name)
             (''Word32         , typeableCon (undefined :: Word32)         ),
             (''Word64         , typeableCon (undefined :: Word64)         ),
             (''TyCon          , typeableCon (undefined :: TyCon)          ),
-            (''TypeRep        , typeableCon (undefined :: TypeRep)        ),
-            (''RealWorld      , typeableCon (undefined :: RealWorld)      )]
+            (''TypeRep        , typeableCon (undefined :: TypeRep)        )]
 
 
 -------------------------------------------------------------------
