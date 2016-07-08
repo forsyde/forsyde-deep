@@ -35,6 +35,7 @@ install:
 
 # Here starts the actual work to be performed for the package under test; any command which exits with a non-zero exit code causes the build to fail.
 script:
+# TODO enable tests, when ghdl simulation works
 # - cabal configure --enable-tests -v2  # -v2 provides useful information for debugging
  - cabal configure -v2  # -v2 provides useful information for debugging
  - cabal build   # this builds all libraries and executables (including tests/benchmarks)
@@ -44,5 +45,6 @@ script:
 # Check that the resulting source distribution can be built & installed.
 # If there are no other `.tar.gz` files in `dist`, this can be even simpler:
 # `cabal install --force-reinstalls dist/*-*.tar.gz`
- - SRC_TGZ=$(cabal info . | awk '{print $2;exit}').tar.gz &&
-   (cd dist && cabal install --force-reinstalls "$SRC_TGZ")
+# TODO reenable this, when type-level and parameterized-data are published.
+# - SRC_TGZ=$(cabal info . | awk '{print $2;exit}').tar.gz &&
+#   (cd dist && cabal install --force-reinstalls "$SRC_TGZ")
