@@ -18,7 +18,7 @@ description:
 
  This library provides the deep implementation of ForSyDe in Haskell.
 category:       Language, Hardware
-tested-with:    GHC==7.4.2
+tested-with:    GHC==7.10.3 GHC==8.0.1
 data-files:     lib/forsyde.vhd
 -- In order to include all this files with sdist
 extra-source-files: LICENSE,
@@ -41,8 +41,6 @@ extra-source-files: LICENSE,
                     tests/Main.hs,
                     tests/Install.hs,
                     tests/properties/Main.hs,
-                    tests/properties/Shallow/SynchronousMoC.hs,
-                    tests/properties/Shallow.hs,
                     tests/properties/VHDLBackend.hs,
 -- due to a bug in cabal 1.2, sdist does not include hs-boot files
                     src/ForSyDe/Deep/Backend/VHDL/GlobalNameTable.hs-boot,
@@ -123,3 +121,7 @@ Library
 
 
   ghc-options:	-Wall -fno-warn-name-shadowing -fno-warn-orphans
+
+source-repository head
+        type:     git
+        location: git://github.com/forsyde/forsyde-deep.git
