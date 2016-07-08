@@ -1,4 +1,4 @@
-{-# LANGUAGE MagicHash, TemplateHaskell  #-}  
+{-# LANGUAGE MagicHash, TemplateHaskell, CPP  #-}  
 {-# OPTIONS_GHC -fno-warn-deprecations #-}
 -- Due to the use of unboxed types, TH, and deprecated Packed Strings
 -----------------------------------------------------------------------------
@@ -56,7 +56,11 @@ deriveLift :: Name -> Q Dec
 deriveLift n
  = do i <- reify n
       case i of
+#if __GLASGOW_HASKELL__ >= 800
           TyConI (DataD dcxt _ vs _ cons _) ->
+#else
+          TyConI (DataD dcxt _ vs cons _) ->
+#endif
               let ctxt = liftM (++ dcxt) $ 
                          cxt [appT (conT ''Lift) (varT v') | v' <- vs']
                   typ = foldl appT (conT n) $ map varT vs'
