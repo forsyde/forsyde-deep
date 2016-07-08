@@ -27,10 +27,6 @@ install:
  - cabal --version
  - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
  - cabal sandbox init
- - git clone https://github.com/forsyde/type-level.git type-level
- - git clone https://github.com/forsyde/parameterized-data.git parameterized-data
- - cabal sandbox add-source type-level
- - cabal sandbox add-source parameterized-data
  - cabal install --dependencies-only
 
 # Here starts the actual work to be performed for the package under test; any command which exits with a non-zero exit code causes the build to fail.
@@ -45,6 +41,5 @@ script:
 # Check that the resulting source distribution can be built & installed.
 # If there are no other `.tar.gz` files in `dist`, this can be even simpler:
 # `cabal install --force-reinstalls dist/*-*.tar.gz`
-# TODO reenable this, when type-level and parameterized-data are published.
-# - SRC_TGZ=$(cabal info . | awk '{print $2;exit}').tar.gz &&
-#   (cd dist && cabal install --force-reinstalls "$SRC_TGZ")
+ - SRC_TGZ=$(cabal info . | awk '{print $2;exit}').tar.gz &&
+   (cd dist && cabal install --force-reinstalls "$SRC_TGZ")
