@@ -89,6 +89,7 @@ Library
                    Data.Typeable.FSDTypeRepLib,
                    Data.Traversable.GenericZipWith,
                    ForSyDe.Deep.Config,
+                   ForSyDe.Deep.Version,
                    ForSyDe.Deep.ForSyDeErr,
                    ForSyDe.Deep.Netlist,
                    ForSyDe.Deep.Netlist.Traverse,
