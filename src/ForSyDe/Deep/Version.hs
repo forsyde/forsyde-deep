@@ -12,14 +12,24 @@
 --
 -----------------------------------------------------------------------------
 
-module ForSyDe.Deep.Version (gitVersion) where
+module ForSyDe.Deep.Version (getVersion) where
+
+import Paths_ForSyDe_Deep (version)
+import Data.Version (showVersion)
 
 import Language.Haskell.TH (runIO)
 import Language.Haskell.TH.Syntax
 import System.Process (readProcess)
+import Control.Exception (catch)
+import System.IO.Error (IOError)
 
-gitVersion :: Q Exp
-gitVersion = do
-        vstr <- runIO $ readProcess "git" ["describe", "--tags", "--dirty"] ""
+getVersion :: Q Exp
+getVersion = do
+        vstr <- runIO $ catch version_git version_cabal
         return (LitE $ StringL $ init vstr)
 
+  where
+    version_git :: IO String
+    version_git = readProcess "git" ["describe", "--tags", "--dirty"] ""
+    version_cabal :: IOError -> IO String
+    version_cabal _ = return $ showVersion version

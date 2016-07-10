@@ -17,7 +17,7 @@ module ForSyDe.Deep.Config (forsydeVersion,
                             module Paths_ForSyDe_Deep) where
 
 import Paths_ForSyDe_Deep
-import ForSyDe.Deep.Version (gitVersion)
+import ForSyDe.Deep.Version (getVersion)
 
 #ifdef DEVELOPER
 maxTupleSize :: Int
@@ -26,4 +26,4 @@ maxTupleSize = 8
 import GHC.Exts (maxTupleSize)
 #endif
 
-forsydeVersion = $(gitVersion)
+forsydeVersion = $(getVersion)
