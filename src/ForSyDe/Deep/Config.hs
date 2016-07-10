@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  ForSyDe.Deep.Config
@@ -14,5 +15,11 @@
 module ForSyDe.Deep.Config (maxTupleSize, module Paths_ForSyDe_Deep) where
 
 import Paths_ForSyDe_Deep
+
+#ifdef DEVELOPER
+maxTupleSize :: Int
+maxTupleSize = 8
+#else
 import GHC.Exts (maxTupleSize)
+#endif
 

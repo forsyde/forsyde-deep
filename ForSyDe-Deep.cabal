@@ -46,6 +46,9 @@ extra-source-files: LICENSE,
                     src/ForSyDe/Deep/Backend/VHDL/GlobalNameTable.hs-boot,
                     src/ForSyDe/Deep/System/SysDef.hs-boot
 
+Flag developer
+  Description: Shorten build time for more fluent development
+  Default:     False
 
 Library
   build-depends:   type-level,
@@ -118,9 +121,9 @@ Library
                    ForSyDe.Deep.Backend.GraphML.Traverse,
                    ForSyDe.Deep.Backend.GraphML.Traverse.GraphMLM
 
-
-
   ghc-options:	-Wall -fno-warn-name-shadowing -fno-warn-orphans
+  if flag(developer)
+        cpp-options: -DDEVELOPER
 
 source-repository head
         type:     git
