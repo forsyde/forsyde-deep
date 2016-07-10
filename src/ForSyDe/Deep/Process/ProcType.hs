@@ -1,5 +1,9 @@
-{-# LANGUAGE TemplateHaskell, PolyKinds #-}
+{-# LANGUAGE TemplateHaskell, PolyKinds, CPP#-}
+#if __GLASGOW_HASKELL__ >= 800
+{-# OPTIONS_GHC -freduction-depth=64 #-}
+#else
 {-# OPTIONS_GHC -fcontext-stack=64 #-}
+#endif
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  ForSyDe.Deep.Process.ProcType

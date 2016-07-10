@@ -35,7 +35,7 @@ import Language.Haskell.TH.LiftInstances ()
 import Data.Dynamic
 import Data.Maybe (fromJust)
 import Data.Set (Set)
-import Data.Typeable.FSDTypeRepLib (FSDTypeRep, FSDType, fsdTy)
+import Data.Typeable.FSDTypeRepLib (FSDTypeRep, fsdTy)
 
 -----------
 -- ProcFun

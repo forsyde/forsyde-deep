@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell #-} 
+{-# LANGUAGE CPP,TemplateHaskell #-} 
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  ForSyDe.Deep.System.SysDef
@@ -171,7 +171,12 @@ newSysDefTHName sysFName inIds outIds =  do
            sysFInfo <- reify sysFName
            -- Check that a function name was provided
            sysFType <- case sysFInfo of
+#if __GLASGOW_HASKELL__ >= 800
+                        -- Last parameter Fixity was removed in GHC8
+                        VarI _ t _    -> return t
+#else
                         VarI _ t _  _ -> return t
+#endif
                         _             -> currError  (NonVarName sysFName)
            -- Check that the function complies with the expected type
            -- and extract the port types
