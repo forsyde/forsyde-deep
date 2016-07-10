@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE TemplateHaskell, CPP #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  ForSyDe.Deep.Config
@@ -12,9 +12,12 @@
 -- Configuration values of ForSyDe
 --
 -----------------------------------------------------------------------------
-module ForSyDe.Deep.Config (maxTupleSize, module Paths_ForSyDe_Deep) where
+module ForSyDe.Deep.Config (forsydeVersion,
+                            maxTupleSize,
+                            module Paths_ForSyDe_Deep) where
 
 import Paths_ForSyDe_Deep
+import ForSyDe.Deep.Version (getVersion)
 
 #ifdef DEVELOPER
 maxTupleSize :: Int
@@ -23,3 +26,4 @@ maxTupleSize = 8
 import GHC.Exts (maxTupleSize)
 #endif
 
+forsydeVersion = $(getVersion)

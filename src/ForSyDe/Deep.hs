@@ -23,7 +23,8 @@ module ForSyDe.Deep
  module ForSyDe.Deep.Bit,
  module ForSyDe.Deep.AbsentExt,
  module ForSyDe.Deep.DFT,
- module ForSyDe.Deep.FIR) where
+ module ForSyDe.Deep.FIR,
+ forsydeVersion) where
 
 import ForSyDe.Deep.Ids
 import ForSyDe.Deep.Signal (Signal)
@@ -34,3 +35,4 @@ import ForSyDe.Deep.Backend
 import ForSyDe.Deep.AbsentExt
 import ForSyDe.Deep.DFT
 import ForSyDe.Deep.FIR
+import ForSyDe.Deep.Config (forsydeVersion)
