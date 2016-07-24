@@ -29,7 +29,8 @@ import Data.Maybe (fromJust)
 import qualified Data.Set as S (filter)
 import Data.Set (Set, union, empty, toList)
 import Control.Monad.State
-import Language.Haskell.TH (nameBase, nameModule, Name, Exp)
+import Language.Haskell.TH (nameBase, nameModule, Name, Exp, Arity)
+import qualified Language.Haskell.TH as TH
 import Data.Typeable (TypeRep,typeRepTyCon,tyConName,tyConPackage,tyConModule)
 import Data.Typeable.FSDTypeRepLib
 
@@ -91,20 +92,23 @@ import Data.Typeable.FSDTypeRepLib
 -- It only makes sense in a process-function context.
 data FunTransST = FunTransST
     {freshNameCount :: Int,
-     nameTable      :: [(Name, (Int, [VHDL.Expr] -> VHDL.Expr ) )],
+     nameTable      :: [(Name, (Arity, [VHDL.Expr] -> VHDL.Expr ) )],
      -- The table entries work as follows:
      -- (Template Haskell Name (table key),
      --   (Arity, function with which to construct the translated VHDL expression
-     --           given itsarguments already translated to VHDL                           --    )
+     --           given itsarguments already translated to VHDL
      -- )
-     auxDecs        :: [SubProgDecItem]}
+     auxDecs        :: [SubProgDecItem],
      -- Auxiliary VHDL declarations generated during the translation of
      -- the ProcFun to be put in the declaration block of the translated VHDL
      -- function.
+     currentFSpec :: Maybe VHDL.SubProgSpec}
+     -- The function signature currently being compiled
+
 
 -- | Initial translation state for functions
 initFunTransST :: FunTransST
-initFunTransST = FunTransST 0 globalNameTable []
+initFunTransST = FunTransST 0 globalNameTable [] Nothing
 
 -----------
 -- VHDLM --
@@ -461,7 +465,7 @@ addSubProgBody newBody = do
 
 
 -- | Add a TH-name (arity, VHDL expression construtor function)  pair to the translation namespace table
-addTransNamePair :: Name -> Int -> ([Expr] -> Expr) -> VHDLM ()
+addTransNamePair :: Name -> Arity -> ([Expr] -> Expr) -> VHDLM ()
 addTransNamePair thName arity vHDLFun = do
  lState <- gets local
  let s = funTransST lState
@@ -481,6 +485,20 @@ addDecsToFunTransST decs = do
 
 
 
+getCurrentFunctionSpec :: VHDLM SubProgSpec
+getCurrentFunctionSpec = do 
+   fSpecM <- gets (currentFSpec.funTransST.local)
+   case fSpecM of
+        Just fSpec -> return fSpec
+        Nothing    -> error "Bug: Incomplete translation context, found `Nothing` expected `Just SubProgSpec`"
+
+putCurrentFunctionSpec :: SubProgSpec -> VHDLM ()
+putCurrentFunctionSpec spec = do
+ lState <- gets local
+ let s = funTransST lState
+ modify (\st -> st{local=lState{funTransST=s{
+                                       currentFSpec=Just spec}}})
+
 -- | Get a fresh VHDL Identifier and increment the
 --   tranlation-namespace-count of freshly generated identifiers.
 --
@@ -491,12 +509,15 @@ addDecsToFunTransST decs = do
 --   freshly generated basic VHDL identifiers cannot clash with the
 --   ones supplied by the frontend.
 genFreshVHDLId :: VHDLM VHDLId
-genFreshVHDLId = do
+genFreshVHDLId = genVHDLId "fresh_"
+
+genVHDLId :: String -> VHDLM VHDLId
+genVHDLId prefix = do
  lState <- gets local
  let ns = funTransST lState
      count = freshNameCount ns
  modify (\st -> st{local=lState{funTransST=ns{freshNameCount=count+1}}})
- return $ unsafeVHDLBasicId ("fresh_" ++ show count)
+ liftEProne.mkVHDLBasicId $ (prefix ++ show count)
 
 -- | Lift an 'EProne' value to the VHDL monad setting current error context
 --   for the error

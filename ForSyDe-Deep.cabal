@@ -112,6 +112,7 @@ Library
                    ForSyDe.Deep.Backend.VHDL.Traverse,
                    ForSyDe.Deep.Backend.VHDL.Traverse.VHDLM,
                    ForSyDe.Deep.Backend.VHDL.Translate,
+                   ForSyDe.Deep.Backend.VHDL.Translate.HigherOrderFunctions,
                    ForSyDe.Deep.Backend.VHDL.Generate,
                    ForSyDe.Deep.Backend.VHDL.TestBench,
                    ForSyDe.Deep.Backend.VHDL.Quartus,

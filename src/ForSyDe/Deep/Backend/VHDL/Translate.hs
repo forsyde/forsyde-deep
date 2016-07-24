@@ -19,6 +19,7 @@ import qualified ForSyDe.Deep.Backend.VHDL.AST as VHDL
 import ForSyDe.Deep.Backend.VHDL.Constants
 import ForSyDe.Deep.Backend.VHDL.Generate
 import ForSyDe.Deep.Backend.VHDL.Traverse.VHDLM
+import ForSyDe.Deep.Backend.VHDL.Translate.HigherOrderFunctions
 
 import ForSyDe.Deep.Ids
 import ForSyDe.Deep.AbsentExt
@@ -512,9 +513,10 @@ transProcFun2VHDL (TypedProcFunAST fType fEnums fAST) = do
  -- auxiliary declarations of the function
  transDecs whereDecs
  -- Translate the function's body
- bodySm <- transFunBodyExp2VHDL fBodyExp
+ putCurrentFunctionSpec fSpec
+ bodySms <- transFunBodyExp2VHDL fBodyExp
  decs <- gets (auxDecs.funTransST.local)
- let  fBody = SubProgBody fSpec decs [bodySm]
+ let  fBody = SubProgBody fSpec decs bodySms
  return (fBody, fVHDLName, fVHDLPars, argsTM, retTM)
 
 -- | Translate a typed function AST to VHDL (only returning the functions body
@@ -713,20 +715,23 @@ expErr exp err = throwFError $ UntranslatableVHDLExp exp err
 
 
 -- | Create the unique statement of a VHDL from a TH expression.
-transFunBodyExp2VHDL :: TH.Exp -> VHDLM SeqSm
+transFunBodyExp2VHDL :: TH.Exp -> VHDLM [SeqSm]
 transFunBodyExp2VHDL  (CondE condE thenE  elseE)  =
   do condVHDLE  <- transExp2VHDL condE
      thenVHDLSm <- transFunBodyExp2VHDL thenE
      elseVHDLSm <- transFunBodyExp2VHDL elseE
-     return (IfSm condVHDLE [thenVHDLSm] [] (Just $ Else [elseVHDLSm]))
+     return [IfSm condVHDLE thenVHDLSm [] (Just $ Else elseVHDLSm)]
 transFunBodyExp2VHDL caseE@(CaseE exp matches)  =
   do caseVHDLE  <- transExp2VHDL exp
      caseSmAlts <- mapM (transMatch2VHDLCaseSmAlt caseE) matches
-     return (CaseSm caseVHDLE caseSmAlts)
+     return [CaseSm caseVHDLE caseSmAlts]
+-- A higher order function needs to be treated specially
+transFunBodyExp2VHDL e@(AppE _ _) 
+   | isHigherOrderFunction e = translateHigherOrderFunctionBody e
 -- In other case it is an expression returned directly
 transFunBodyExp2VHDL  e =
   do vHDLe <- transExp2VHDL e
-     return (ReturnSm $ Just vHDLe)
+     return [ReturnSm $ Just vHDLe]
 
 -- | Translate a case alternative from Haskell to VHDL
 transMatch2VHDLCaseSmAlt :: TH.Exp -> TH.Match -> VHDLM CaseSmAlt
@@ -739,12 +744,12 @@ transMatch2VHDLCaseSmAlt contextExp (Match pat (NormalB matchExp) decs) =
     case pat of
      -- FIXME: support pattern matching with tuples, AbsExt,
      -- and enumerated types
-     WildP -> return $ CaseSmAlt [Others] [sm]
+     WildP -> return $ CaseSmAlt [Others] sm
      LitP lit -> do vHDLExp <- transExp2VHDL (LitE lit)
-                    return $ CaseSmAlt [ChoiceE vHDLExp] [sm]
+                    return $ CaseSmAlt [ChoiceE vHDLExp] sm
      -- FIXME: check! this case introduces new names into scope
      VarP name -> do vHDLExp <- transExp2VHDL (VarE name)
-                     return $ CaseSmAlt [ChoiceE vHDLExp] [sm]
+                     return $ CaseSmAlt [ChoiceE vHDLExp] sm
      _ -> expErr contextExp $ UnsupportedCasePat pat
 transMatch2VHDLCaseSmAlt contextExp (Match _ bdy@(GuardedB _) _) =
  expErr contextExp $ CaseGuardedBody bdy
