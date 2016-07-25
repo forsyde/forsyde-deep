@@ -32,6 +32,19 @@ import System.IO
 import System.FilePath ((</>))
 import qualified Language.Haskell.TH as TH (Exp)
 
+--
+-- This tool driver needs a Ghdl version containing the following commit,
+-- otherwise it will fail with an obscure pattern match failure from within TH
+-- generated code
+--
+-- commit f6d8e786a1ca3165b41cea7de05b8f2151ac31ff
+-- Author: Tristan Gingold <tgingold@free.fr>
+-- Date:   Sat May 30 14:05:20 2015 +0200
+--
+--     write: do not implicitely append LF.
+--
+-- The oldest release containing this was v0.33 
+--
 data GhdlCommand = Analyze | Elaborate | Compile | Import | Run deriving Eq
 
 instance Show GhdlCommand where
@@ -135,6 +148,8 @@ executeTestBenchGhdl mCycles stimuli = do
  testOutput <- runGhdlSim (sysTb env) cycles
 
  liftIO $ setCurrentDirectory (".." </> "..")
+ --liftIO $ print testOutput -- show what we actually get from Ghdl
+
  parseTestBenchOut testOutput
 
 runGhdlCompile :: String -> FilePath -> [FilePath] -> [FilePath] -> VHDLM ()
