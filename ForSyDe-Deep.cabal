@@ -38,10 +38,9 @@ extra-source-files: LICENSE,
                     examples/ParAddFour.hs,
                     examples/SeqAddFour.hs,
                     examples/ZipTwist.hs,
-                    tests/Main.hs,
                     tests/Install.hs,
-                    tests/properties/Main.hs,
-                    tests/properties/VHDLBackend.hs,
+                    tests/examples/Main.hs,
+                    tests/examples/VHDLBackend.hs,
 -- due to a bug in cabal 1.2, sdist does not include hs-boot files
                     src/ForSyDe/Deep/Backend/VHDL/GlobalNameTable.hs-boot,
                     src/ForSyDe/Deep/System/SysDef.hs-boot
