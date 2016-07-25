@@ -41,8 +41,7 @@ script:
  - cabal test
  - echo ">>>>>>> Test log: " dist/test/ForSyDe-Deep*-examples.log
  - cat dist/test/ForSyDe-Deep*-examples.log
- - echi "<<<<<<<"
-
+ - echo "<<<<<<<"
 # Check that the resulting source distribution can be built & installed.
 # If there are no other `.tar.gz` files in `dist`, this can be even simpler:
 # `cabal install --force-reinstalls dist/*-*.tar.gz`
