@@ -62,7 +62,8 @@ Test-Suite examples
                    ForSyDe-Deep,
                    HUnit,
                    random,
-                   syb
+                   syb,
+                   directory
 
 Library
   build-depends:   type-level,
