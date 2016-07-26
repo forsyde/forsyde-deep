@@ -14,6 +14,7 @@ import qualified Data.Param.FSVec as V
 import ForSyDe.Deep.Backend.VHDL.Traverse.VHDLM
 import Data.Maybe (isJust)
 import Data.Data (tyconUQname)
+import Control.Monad (when)
 
 
 isHigherOrderFunction :: TH.Exp -> Bool
@@ -39,41 +40,19 @@ getHoF _ = Nothing
 
 
 hofNameTable :: [((TH.Name, Arity), TrFun)]
-hofNameTable = [(('V.map,       2), translateMap),
-                (('V.foldl,     3), translateFold "RANGE"),
-                (('V.foldr,     3), translateFold "REVERSE_RANGE")]
+hofNameTable = [(('V.foldl,     3), translateFold    'V.foldl "RANGE"),
+                (('V.foldr,     3), translateFold    'V.foldr "REVERSE_RANGE"),
+                (('V.map,       2), translateZipWith 'V.map 2),
+                (('V.zipWith,   3), translateZipWith 'V.zipWith 3),
+                (('V.zipWith3,  4), translateZipWith 'V.zipWith3 4)]
 
 
 -- ---------------------
 -- Translation functions
 -- ---------------------
 
-translateMap :: TH.Exp -> VHDLM [VHDL.SeqSm]
-translateMap (((VarE mapname) `AppE` (VarE fname)) `AppE` (VarE _)) | mapname == 'V.map = do
-  fnameV   <- transTHName2VHDL fname
-  loopvar  <- genVHDLId "i"
-  retnameV <- genVHDLId "ret"
-
-  fSpec <- getCurrentFunctionSpec
-  let Function _ [IfaceVarDec argnameV _] rettype = fSpec
-
-  -- variable ret : rettype
-  let vardecl = SPVD $ VarDec retnameV (SubtypeIn rettype Nothing) Nothing
-  addDecsToFunTransST [vardecl]
-
-  -- for i in arg'range loop
-  --    ret(i) := f(arg(i))
-  -- end loop
-  -- return ret
-  let rangeAttrib = unsafeVHDLBasicId "RANGE"
-      range       = AttribRange $ AttribName (NSimple argnameV) rangeAttrib Nothing
-      body        = [(retnameV!:loopvar) := (fnameV $: [argnameV!:loopvar])]
-  return $ [ForSM loopvar range body, ReturnSm . Just . PrimName . NSimple $ retnameV]
-translateMap e = error $ "Invalid application of map: got `"++(pprint e)++"` expected `map f arg`"
-
-
-translateFold :: String -> TH.Exp -> VHDLM [VHDL.SeqSm]
-translateFold attributeName ((((VarE foldlname) `AppE` (VarE fname)) `AppE` (VarE _)) `AppE` (VarE _)) | foldlname == 'V.foldl = do
+translateFold :: TH.Name -> String -> TH.Exp -> VHDLM [VHDL.SeqSm]
+translateFold selfName attributeName exp@((((VarE foldname) `AppE` (VarE fname)) `AppE` (VarE _)) `AppE` (VarE _)) | foldname == selfName = do
   fnameId   <- transTHName2VHDL fname
   loopvarId  <- genVHDLId "i"
   stateId <- genVHDLId "state"
@@ -82,9 +61,10 @@ translateFold attributeName ((((VarE foldlname) `AppE` (VarE fname)) `AppE` (Var
   fSpec <- getCurrentFunctionSpec
   let Function _ [IfaceVarDec initId stateType,
                   IfaceVarDec argId _] _ = fSpec
-  -- assert that stateType == rettype?
 
-  -- variable tmp : stateType
+  assertNormalForm exp fSpec
+
+  -- variable state : stateType
   let vardecl = SPVD $ VarDec stateId (SubtypeIn stateType Nothing) Nothing
   addDecsToFunTransST [vardecl]
 
@@ -103,7 +83,44 @@ translateFold attributeName ((((VarE foldlname) `AppE` (VarE fname)) `AppE` (Var
   let retStmt = ReturnSm . Just . PrimName . NSimple $ stateId
 
   return [initStmt, forLoopStmt, retStmt]
-translateFold _ e = error $ "Invalid application of foldl: got `"++(pprint e)++"` expected `foldl f arg`"
+translateFold selfName _ e = error $ "Invalid application of "++(show selfName)++": got `"++(pprint e)++"` expected `"++(show selfName)++" f arg`"
+
+
+translateZipWith :: TH.Name -> Int -> TH.Exp -> VHDLM [VHDL.SeqSm]
+translateZipWith selfName selfArity exp | (hofName == selfName) && (nArgs == selfArity) = do
+    fnameV   <- transTHName2VHDL fname
+    loopvar  <- genVHDLId "i"
+    retnameV <- genVHDLId "ret"
+
+    fSpec <- getCurrentFunctionSpec
+    let Function _ _ rettype = fSpec
+
+    assertNormalForm exp fSpec
+
+    argNames <- mapM (\(VarE argName) -> transTHName2VHDL argName) thArgs
+
+    -- variable ret : rettype
+    let vardecl = SPVD $ VarDec retnameV (SubtypeIn rettype Nothing) Nothing
+    addDecsToFunTransST [vardecl]
+
+    -- for i in arg'range loop
+    --    ret(i) := f(arg1(i), arg2(i), [...])
+    -- end loop
+    let rangeAttrib   = unsafeVHDLBasicId "RANGE"
+        range         = AttribRange $ AttribName (NSimple retnameV) rangeAttrib Nothing
+        indexedArgLst = map (\name -> name!:loopvar) argNames
+        body          = [(retnameV!:loopvar) := (fnameV $: indexedArgLst)]
+        loopStmt      = ForSM loopvar range body
+    -- return ret
+    let returnStmt    = ReturnSm . Just . PrimName . NSimple $ retnameV
+
+    return $ [loopStmt, returnStmt]
+  where
+    ((VarE hofName), (VarE fname):thArgs, nArgs) = unApp exp
+translateZipWith selfName selfArity e = error $ "Invalid application of "++self++": got `"++exp++"` expected `"++self++" f "++args++"`"
+        where self = show selfName
+              exp  = pprint e
+              args = unwords $ replicate selfArity "arg"
 
 
 -- ---------
@@ -118,11 +135,11 @@ translateFold _ e = error $ "Invalid application of foldl: got `"++(pprint e)++"
 ($:) :: VHDLId -> [VHDLName] -> VHDL.Expr
 ($:) fname args = PrimFCall $ FCall (NSimple fname) (map (\a -> Nothing :=>: (ADName a)) args)
 
--- AST level assignment operator
+-- AST level sequential assignment operator
 -- (:=) :: VHDLName -> VHDL.Expr -> VHDL.SeqSm
 -- defined in ForSyDe.Deep.Backend.VHDL.AST
 
--- AST level association operator
+-- AST level map-association operator
 -- (:=>: :: Maybe SimpleName -> ActualDesig -> AssocElem
 -- defined in ForSyDe.Deep.Backend.VHDL.AST
 
@@ -136,3 +153,40 @@ unApp e = (first, rest, n)
 transTHName2VHDL :: TH.Name -> VHDLM VHDLId
 transTHName2VHDL = liftEProne . mkVHDLExtId . tyconUQname  . pprint
 
+-- Check whether the given function application and the given function
+-- signature are in normal form. Raises an error when the normal form is
+-- violated, otherwise simply returns ().
+--
+-- The signature is derived from the outer definition, while the application
+-- expression represents the body of the specialized function 
+-- Some specializations in normal form:
+--   map_f v = map f v
+--   foldl_f i v = foldl f i v
+--   zipWith_f a b = zipWith f a b
+--
+-- Normal form means, that apart from the higher order argument, the
+-- argument lists agree. This means that all arguments are explicitly written
+-- and the names of all arguments are the same. This ensures, that the types
+-- within the signature can be relied upon for translation purposes.
+-- Additionally, the application of the specialized function needs to be the
+-- sole expresssion in the function body, which ensures that the return type of
+-- the function is valid as well.
+--
+-- Some specializations not in normal form:
+--   map_f = map f
+--    => incomplete argument list
+--   foldl_f v i = foldl f i v
+--    => order of arguments does not match
+--   zipWith_f v = zipWith f v v
+--    => duplicated argument
+--
+assertNormalForm :: TH.Exp -> VHDL.SubProgSpec -> VHDLM ()
+assertNormalForm appl sig = do
+  let (_, _:args, _) = unApp appl
+      (Function _ argDecls _) = sig
+  
+  argNamesBody <- mapM (\(VarE name) -> transTHName2VHDL name) args
+  let argNamesSig = map (\(IfaceVarDec name _) -> name) argDecls
+  
+  when (argNamesBody /= argNamesSig) $ error ("Higher order function application is not in normal form: "++(pprint appl)++"\n The argument list must agree")
+  return ()
