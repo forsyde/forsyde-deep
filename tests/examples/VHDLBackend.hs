@@ -15,6 +15,9 @@ import ZipTwist
 import CarrySelectAdder     
 import Null
 import LFSR
+import MapVector
+import FoldlVector
+import ZipWithVector
 
 import Control.Monad (liftM, replicateM)
 import Data.List (transpose)
@@ -23,6 +26,7 @@ import System.Random
 import Test.HUnit
 import ForSyDe.Deep
 import Data.Int
+import Test.QuickCheck (generate, vectorOf, choose)
 
 vhdlBackendTest :: Test
 vhdlBackendTest = test [aluTest, 
@@ -34,7 +38,10 @@ vhdlBackendTest = test [aluTest,
                         buttonEncoderTest,
                         zipTwistTest,
                         nullTest,
-                        lfsrTest
+                        lfsrTest,
+                        mapVTest,
+                        foldlVTest,
+                        zipWithVTest
                         ]
 
 -- systematic test for the ALU
@@ -153,6 +160,39 @@ lfsrTest = "lsfrTest" ~: outSim <~=?> outVHDL
                                     take 400 i4)
        outSim = take400Tup4 simlfsr
        outVHDL =  vhdlTest (Just 400) lfsrSys
+
+mapVTest :: Test
+mapVTest = "mapVTest" ~: outSim <~=?> outVHDL
+ where 
+   outSim = take 100 simVecCounter
+   outVHDL = vhdlTest (Just 100) vecCounterSys
+
+foldlVTest :: Test
+foldlVTest = "foldlVTest" ~: TestCase ioTest
+ where 
+   int32Range = (-2147483647,2147483647):: (Int32, Int32)
+   ioTest = do
+     testData <- generate.(vectorOf 100).(vectorOf 4).choose $ int32Range
+     let input  = map reallyUnsafeVector testData
+         outSim = simFoldingAdder input
+     outVHDL <- vhdlTest (Just 100) foldingAdderSys input
+     outSim @=? outVHDL 
+
+zipWithVTest :: Test
+zipWithVTest = "zipWithVTest" ~: TestCase ioTest
+ where
+   int32Range = (-2147483647,2147483647):: (Int32, Int32)
+   ioTest = do
+     testDataA <- generate.(vectorOf 100).(vectorOf 4).choose $ int32Range
+     testDataB <- generate.(vectorOf 100).(vectorOf 4).choose $ int32Range
+     let inputA  = map reallyUnsafeVector testDataA
+         inputB  = map reallyUnsafeVector testDataB
+         outSim = simZipWithVSys inputA inputB
+     outVHDL <- vhdlTest (Just 100) zipWithVSys inputA inputB
+     outSim @=? outVHDL 
+
+     
+
 
 -------------------
 -- Helper functions

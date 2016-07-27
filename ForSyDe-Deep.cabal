@@ -62,7 +62,8 @@ Test-Suite examples
                    HUnit,
                    random,
                    syb,
-                   directory
+                   directory,
+                   QuickCheck
 
 Library
   build-depends:   type-level,
