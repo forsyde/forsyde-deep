@@ -2,7 +2,7 @@
 
 -- A counter, the simplest system with which to test netlist loops
 
-module MapVector where
+module FoldlVector where
 
 import ForSyDe.Deep
 import Data.TypeLevel.Num hiding ((+))
@@ -10,8 +10,8 @@ import qualified Data.Param.FSVec as V
 import Data.Param.FSVec ((+>), empty)
 import Data.Int
 
-counter :: Signal (V.FSVec D4 Int32) -> Signal Int32
-counter  = mapSY "counterSource" add1
+foldingAdder :: Signal (V.FSVec D4 Int32) -> Signal Int32
+foldingAdder  = mapSY "counterSource" add1
  where add1 = $(newProcFun [d| add1v :: (V.FSVec D4 Int32) -> Int32
                                add1v v = foldladd1 0 v
                                  where
@@ -23,8 +23,8 @@ counter  = mapSY "counterSource" add1
                                      foldladd1 :: Int32 -> (V.FSVec D4 Int32) -> Int32
                                      foldladd1 init v = V.foldl add1 init v |])
 
-counterSys :: SysDef ((Signal (V.FSVec D4 Int32)) -> Signal Int32)
-counterSys = newSysDef counter "counterFoldlV" ["input"] ["countVal"]
+foldingAdderSys :: SysDef ((Signal (V.FSVec D4 Int32)) -> Signal Int32)
+foldingAdderSys = newSysDef foldingAdder "foldingAdder" ["input"] ["countVal"]
 
-simCounter :: [Int32]
-simCounter = simulate counterSys [1+>2+>3+>4+>empty,2+>3+>4+>5+>empty]
+simFoldingAdder :: [(V.FSVec D4 Int32)] -> [Int32]
+simFoldingAdder = simulate foldingAdderSys 
