@@ -16,6 +16,8 @@ module ForSyDe.Deep.Backend.VHDL
   writeVHDLOps,
   writeAndModelsimVHDL,
   writeAndModelsimVHDLOps, 
+  writeAndGhdlVHDL,
+  writeAndGhdlVHDLOps, 
   VHDLOps(..),
   QuartusOps(..),
   QuartusAction(..),
@@ -33,6 +35,7 @@ import ForSyDe.Deep.OSharing (readURef)
 import ForSyDe.Deep.System.SysDef
 import ForSyDe.Deep.Backend.VHDL.Traverse
 import ForSyDe.Deep.Backend.VHDL.Modelsim
+import ForSyDe.Deep.Backend.VHDL.Ghdl
 
 -- | Given a System Definition whose name is a valid VHDL _basic_ identifier 
 --   (call it \"A\") generate @A.vhd@ in current working directory using 
@@ -84,6 +87,38 @@ writeAndModelsimVHDLOps ops mCycles sysDef = fromTHStrSimFun simIO []
          setVHDLOps ops{compileModelsim=True} 
          writeVHDLM
          executeTestBenchModelsim mCycles stimuli 
+       simIO :: [[TH.Exp]] -> IO [[String]] 
+       simIO stimuli = do
+         res <- runErrorT $ evalStateT (simVHDLM stimuli) sinit
+         either printVHDLError return res
+
+-- | Generate a function which, given a system definition and some simulation
+--   stimuli:
+--    
+--     (1) Writes a VHDL model of the system 
+--     
+--     (2) Simulates the VHDL model with Ghdl getting the results back to Haskell
+writeAndGhdlVHDL :: SysFunToIOSimFun sysF simF =>  
+                        Maybe Int -- ^ Number of cycles to simulate
+                                --   if 'Nothing' the number will be determined
+                                --   by the length of the input stimulti.
+                                --   Useful when the system to simulate doesn't
+                                --   have inputs or the inputs provided are 
+                                --   infinite
+                     -> SysDef sysF -- ^ system definition to simulate
+                     -> simF 
+writeAndGhdlVHDL = writeAndGhdlVHDLOps defaultVHDLOps
+
+-- | 'VHDLOps'-alternative of 'writeAndGhdlVHDL'
+writeAndGhdlVHDLOps :: SysFunToIOSimFun sysF simF => 
+                           VHDLOps -> Maybe Int -> SysDef sysF -> simF 
+writeAndGhdlVHDLOps ops mCycles sysDef = fromTHStrSimFun simIO []
+ where sinit = initVHDLTravST $ (readURef.unPrimSysDef.unSysDef) sysDef
+       simVHDLM :: [[TH.Exp]] -> VHDLM [[String]] 
+       simVHDLM stimuli = do 
+         setVHDLOps ops
+         writeVHDLM
+         executeTestBenchGhdl mCycles stimuli 
        simIO :: [[TH.Exp]] -> IO [[String]] 
        simIO stimuli = do
          res <- runErrorT $ evalStateT (simVHDLM stimuli) sinit

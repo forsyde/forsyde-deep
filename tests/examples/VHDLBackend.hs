@@ -26,15 +26,16 @@ import Data.Int
 
 vhdlBackendTest :: Test
 vhdlBackendTest = test [aluTest, 
-                        counterTest,
+                        --counterTest,
                         parAddFourTest,
                         muxTest,
-                        muxFSVecTest,
+                        --muxFSVecTest,
                         seqAddFourTest,
                         buttonEncoderTest,
                         zipTwistTest,
                         nullTest,
-                        lfsrTest]
+                        lfsrTest
+                        ]
 
 -- systematic test for the ALU
 aluTest :: Test
@@ -143,7 +144,8 @@ zipTwistTest = "zipTwistTest" ~:
 
 nullTest :: Test
 -- we don't test quartus here, because it complains about no logic
-nullTest = "nullTest" ~: simNull <~=?>  writeAndModelsimVHDL Nothing nullSysDef 
+--nullTest = "nullTest" ~: simNull <~=?>  writeAndModelsimVHDL Nothing nullSysDef 
+nullTest = "nullTest" ~: simNull <~=?>  vhdlTest Nothing nullSysDef
        
 lfsrTest :: Test
 lfsrTest = "lsfrTest" ~: outSim <~=?> outVHDL
@@ -159,7 +161,8 @@ lfsrTest = "lsfrTest" ~: outSim <~=?> outVHDL
 
 -- run a vhdl testbench with custom backend options
 vhdlTest :: SysFunToIOSimFun sysF simF => Maybe Int -> SysDef sysF -> simF
-vhdlTest = writeAndModelsimVHDLOps testVHDLOps
+-- vhdlTest = writeAndModelsimVHDLOps testVHDLOps
+vhdlTest = writeAndGhdlVHDL
 
 -- testing VHDL options
 testVHDLOps :: VHDLOps
