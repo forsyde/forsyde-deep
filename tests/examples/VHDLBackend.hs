@@ -18,6 +18,8 @@ import LFSR
 import MapVector
 import FoldlVector
 import ZipWithVector
+import FoldlVectorOperator
+import ZipWithVectorOperator
 
 import Control.Monad (liftM, replicateM)
 import Data.List (transpose)
@@ -40,6 +42,8 @@ vhdlBackendTest = test [aluTest,
                         nullTest,
                         lfsrTest,
                         mapVTest,
+                        foldlVOpTest,
+                        zipWithVOpTest,
                         foldlVTest,
                         zipWithVTest
                         ]
@@ -191,6 +195,29 @@ zipWithVTest = "zipWithVTest" ~: TestCase ioTest
      outVHDL <- vhdlTest (Just 100) zipWithVSys inputA inputB
      outSim @=? outVHDL 
 
+foldlVOpTest :: Test
+foldlVOpTest = "foldlVOpTest" ~: TestCase ioTest
+ where 
+   int32Range = (-2147483647,2147483647):: (Int32, Int32)
+   ioTest = do
+     testData <- generate.(vectorOf 100).(vectorOf 4).choose $ int32Range
+     let input  = map reallyUnsafeVector testData
+         outSim = simFoldingAdderOp input
+     outVHDL <- vhdlTest (Just 100) foldingAdderOpSys input
+     outSim @=? outVHDL 
+
+zipWithVOpTest :: Test
+zipWithVOpTest = "zipWithVOpTest" ~: TestCase ioTest
+ where
+   int32Range = (-2147483647,2147483647):: (Int32, Int32)
+   ioTest = do
+     testDataA <- generate.(vectorOf 100).(vectorOf 4).choose $ int32Range
+     testDataB <- generate.(vectorOf 100).(vectorOf 4).choose $ int32Range
+     let inputA  = map reallyUnsafeVector testDataA
+         inputB  = map reallyUnsafeVector testDataB
+         outSim = simZipWithVOpSys inputA inputB
+     outVHDL <- vhdlTest (Just 100) zipWithVOpSys inputA inputB
+     outSim @=? outVHDL 
      
 
 

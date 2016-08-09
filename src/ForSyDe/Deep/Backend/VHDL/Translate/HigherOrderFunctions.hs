@@ -15,6 +15,7 @@ import ForSyDe.Deep.Backend.VHDL.Traverse.VHDLM
 import Data.Maybe (isJust)
 import Data.Data (tyconUQname)
 import Control.Monad (when)
+import Control.Monad.State
 
 
 isHigherOrderFunction :: TH.Exp -> Bool
@@ -64,6 +65,12 @@ translateFold selfName attributeName exp@((((VarE foldname) `AppE` (VarE fname))
 
   assertNormalForm exp fSpec
 
+  -- check whether this is a known operator
+  knownTranslation <- lookupName fname
+  let fCall = case knownTranslation of 
+            Just (arity, genFCallExp) -> (\args -> genFCallExp (map PrimName args))
+            Nothing                   -> (\args -> fnameId $: args)
+
   -- variable state : stateType
   let vardecl = SPVD $ VarDec stateId (SubtypeIn stateType Nothing) Nothing
   addDecsToFunTransST [vardecl]
@@ -76,7 +83,7 @@ translateFold selfName attributeName exp@((((VarE foldname) `AppE` (VarE fname))
   -- end loop
   let rangeAttrib = unsafeVHDLBasicId attributeName
       range       = AttribRange $ AttribName (NSimple argId) rangeAttrib Nothing
-      body        = [(NSimple stateId) := (fnameId $: [NSimple stateId, argId!:loopvarId])]
+      body        = [(NSimple stateId) := (fCall [NSimple stateId, argId!:loopvarId])]
       forLoopStmt = ForSM loopvarId range body
 
   -- return state
@@ -97,6 +104,12 @@ translateZipWith selfName selfArity exp | (hofName == selfName) && (nArgs == sel
 
     assertNormalForm exp fSpec
 
+    -- check whether this is a known operator
+    knownTranslation <- lookupName fname
+    let fCall = case knownTranslation of 
+                  Just (arity, genFCallExp) -> (\args -> genFCallExp (map PrimName args))
+                  Nothing                   -> (\args -> fnameV $: args)
+
     argNames <- mapM (\(VarE argName) -> transTHName2VHDL argName) thArgs
 
     -- variable ret : rettype
@@ -109,7 +122,7 @@ translateZipWith selfName selfArity exp | (hofName == selfName) && (nArgs == sel
     let rangeAttrib   = unsafeVHDLBasicId "RANGE"
         range         = AttribRange $ AttribName (NSimple retnameV) rangeAttrib Nothing
         indexedArgLst = map (\name -> name!:loopvar) argNames
-        body          = [(retnameV!:loopvar) := (fnameV $: indexedArgLst)]
+        body          = [(retnameV!:loopvar) := (fCall indexedArgLst)]
         loopStmt      = ForSM loopvar range body
     -- return ret
     let returnStmt    = ReturnSm . Just . PrimName . NSimple $ retnameV
@@ -152,6 +165,12 @@ unApp e = (first, rest, n)
 
 transTHName2VHDL :: TH.Name -> VHDLM VHDLId
 transTHName2VHDL = liftEProne . mkVHDLExtId . tyconUQname  . pprint
+
+lookupName :: Name -> VHDLM (Maybe (Arity, [VHDL.Expr] -> VHDL.Expr))
+lookupName name = do
+  nameTable <- gets (nameTable.funTransST.local)
+  return $ lookup name nameTable
+
 
 -- Check whether the given function application and the given function
 -- signature are in normal form. Raises an error when the normal form is
