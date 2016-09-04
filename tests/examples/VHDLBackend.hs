@@ -16,6 +16,9 @@ import CarrySelectAdder
 import Null
 import LFSR
 import MapVector
+import MapVectorOperatorSection
+import MapVectorTransformation
+import MapLambdaVector
 import FoldlVector
 import ZipWithVector
 import FoldlVectorOperator
@@ -42,6 +45,9 @@ vhdlBackendTest = test [aluTest,
                         nullTest,
                         lfsrTest,
                         mapVTest,
+                        mapVectorTransformationTest,
+                        mapLambdaVectorTest,
+                        mapVectorOperatorSectionTest,
                         foldlVOpTest,
                         zipWithVOpTest,
                         foldlVTest,
@@ -220,6 +226,23 @@ zipWithVOpTest = "zipWithVOpTest" ~: TestCase ioTest
      outSim @=? outVHDL 
      
 
+mapVectorOperatorSectionTest :: Test
+mapVectorOperatorSectionTest = "mapVectorOperatorSectionTest" ~: outSim <~=?> outVHDL
+ where 
+   outSim = take 100 simVecOpSecCounter
+   outVHDL = vhdlTest (Just 100) vecOpSecCounterSys
+
+mapLambdaVectorTest :: Test
+mapLambdaVectorTest = "mapLambdaVectorTest" ~: outSim <~=?> outVHDL
+ where 
+   outSim = take 100 simLamVecCounter
+   outVHDL = vhdlTest (Just 100) vecLamCounterSys
+
+mapVectorTransformationTest :: Test
+mapVectorTransformationTest = "mapVectorTransformationTest" ~: outSim <~=?> outVHDL
+ where 
+   outSim = take 100 simTransfVecCounter
+   outVHDL = vhdlTest (Just 100) transfVecCounterSys
 
 -------------------
 -- Helper functions
