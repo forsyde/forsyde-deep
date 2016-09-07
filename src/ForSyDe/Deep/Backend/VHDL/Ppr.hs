@@ -113,6 +113,7 @@ instance Ppr PackageDecItem where
  ppr (PDISS subProgSpec) = ppr subProgSpec <> semi
 
 instance Ppr PackageBody where
+ ppr (PackageBody _ []) = text "" -- skip empty body
  ppr (PackageBody id decs) =
   text "package body" <+> idDoc <+> text "is" $+$
    vSpace $++$

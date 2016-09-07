@@ -1,6 +1,6 @@
 name:           ForSyDe-Deep
 version:        0.2.0
-cabal-version:  >= 1.6
+cabal-version:  >= 1.9.2
 build-type:     Custom
 license:        BSD3
 license-file:   LICENSE
@@ -38,17 +38,32 @@ extra-source-files: LICENSE,
                     examples/ParAddFour.hs,
                     examples/SeqAddFour.hs,
                     examples/ZipTwist.hs,
-                    tests/Main.hs,
                     tests/Install.hs,
-                    tests/properties/Main.hs,
-                    tests/properties/VHDLBackend.hs,
+                    tests/examples/Main.hs,
+                    tests/examples/VHDLBackend.hs,
 -- due to a bug in cabal 1.2, sdist does not include hs-boot files
                     src/ForSyDe/Deep/Backend/VHDL/GlobalNameTable.hs-boot,
                     src/ForSyDe/Deep/System/SysDef.hs-boot
 
+
 Flag developer
   Description: Shorten build time for more fluent development
   Default:     False
+
+Test-Suite examples
+  type:       exitcode-stdio-1.0
+  main-is:    Main.hs
+  hs-source-dirs:  tests/examples,
+                   examples/
+  build-depends:   base>=4 && <6,
+                   parameterized-data >= 0.1.5,
+                   type-level,
+                   ForSyDe-Deep,
+                   HUnit,
+                   random,
+                   syb,
+                   directory,
+                   QuickCheck
 
 Library
   build-depends:   type-level,
@@ -57,6 +72,7 @@ Library
                    base>=4 && <6,
                    regex-posix,
                    mtl,
+                   syb,
                    pretty,
                    template-haskell,
                    process,
@@ -100,6 +116,7 @@ Library
                    ForSyDe.Deep.System.SysDef,
                    ForSyDe.Deep.System.Instantiate,
                    ForSyDe.Deep.Process.ProcFun,
+                   ForSyDe.Deep.Process.Desugar,
                    ForSyDe.Deep.Process.ProcVal,
                    ForSyDe.Deep.Process.ProcType,
                    ForSyDe.Deep.Process.ProcType.Instances,
@@ -112,10 +129,12 @@ Library
                    ForSyDe.Deep.Backend.VHDL.Traverse,
                    ForSyDe.Deep.Backend.VHDL.Traverse.VHDLM,
                    ForSyDe.Deep.Backend.VHDL.Translate,
+                   ForSyDe.Deep.Backend.VHDL.Translate.HigherOrderFunctions,
                    ForSyDe.Deep.Backend.VHDL.Generate,
                    ForSyDe.Deep.Backend.VHDL.TestBench,
                    ForSyDe.Deep.Backend.VHDL.Quartus,
                    ForSyDe.Deep.Backend.VHDL.Modelsim,
+                   ForSyDe.Deep.Backend.VHDL.Ghdl,
                    ForSyDe.Deep.Backend.GraphML.AST,
                    ForSyDe.Deep.Backend.GraphML.Ppr,
                    ForSyDe.Deep.Backend.GraphML.FileIO,

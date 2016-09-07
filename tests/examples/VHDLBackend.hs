@@ -15,6 +15,14 @@ import ZipTwist
 import CarrySelectAdder     
 import Null
 import LFSR
+import MapVector
+import MapVectorOperatorSection
+import MapVectorTransformation
+import MapLambdaVector
+import FoldlVector
+import ZipWithVector
+import FoldlVectorOperator
+import ZipWithVectorOperator
 
 import Control.Monad (liftM, replicateM)
 import Data.List (transpose)
@@ -23,18 +31,28 @@ import System.Random
 import Test.HUnit
 import ForSyDe.Deep
 import Data.Int
+import Test.QuickCheck (generate, vectorOf, choose)
 
 vhdlBackendTest :: Test
 vhdlBackendTest = test [aluTest, 
-                        counterTest,
+                        --counterTest,
                         parAddFourTest,
                         muxTest,
-                        muxFSVecTest,
+                        --muxFSVecTest,
                         seqAddFourTest,
                         buttonEncoderTest,
                         zipTwistTest,
                         nullTest,
-                        lfsrTest]
+                        lfsrTest,
+                        mapVTest,
+                        mapVectorTransformationTest,
+                        mapLambdaVectorTest,
+                        mapVectorOperatorSectionTest,
+                        foldlVOpTest,
+                        zipWithVOpTest,
+                        foldlVTest,
+                        zipWithVTest
+                        ]
 
 -- systematic test for the ALU
 aluTest :: Test
@@ -143,7 +161,8 @@ zipTwistTest = "zipTwistTest" ~:
 
 nullTest :: Test
 -- we don't test quartus here, because it complains about no logic
-nullTest = "nullTest" ~: simNull <~=?>  writeAndModelsimVHDL Nothing nullSysDef 
+--nullTest = "nullTest" ~: simNull <~=?>  writeAndModelsimVHDL Nothing nullSysDef 
+nullTest = "nullTest" ~: simNull <~=?>  vhdlTest Nothing nullSysDef
        
 lfsrTest :: Test
 lfsrTest = "lsfrTest" ~: outSim <~=?> outVHDL
@@ -152,6 +171,79 @@ lfsrTest = "lsfrTest" ~: outSim <~=?> outVHDL
        outSim = take400Tup4 simlfsr
        outVHDL =  vhdlTest (Just 400) lfsrSys
 
+mapVTest :: Test
+mapVTest = "mapVTest" ~: outSim <~=?> outVHDL
+ where 
+   outSim = take 100 simVecCounter
+   outVHDL = vhdlTest (Just 100) vecCounterSys
+
+foldlVTest :: Test
+foldlVTest = "foldlVTest" ~: TestCase ioTest
+ where 
+   int32Range = (-2147483647,2147483647):: (Int32, Int32)
+   ioTest = do
+     testData <- generate.(vectorOf 100).(vectorOf 4).choose $ int32Range
+     let input  = map reallyUnsafeVector testData
+         outSim = simFoldingAdder input
+     outVHDL <- vhdlTest (Just 100) foldingAdderSys input
+     outSim @=? outVHDL 
+
+zipWithVTest :: Test
+zipWithVTest = "zipWithVTest" ~: TestCase ioTest
+ where
+   int32Range = (-2147483647,2147483647):: (Int32, Int32)
+   ioTest = do
+     testDataA <- generate.(vectorOf 100).(vectorOf 4).choose $ int32Range
+     testDataB <- generate.(vectorOf 100).(vectorOf 4).choose $ int32Range
+     let inputA  = map reallyUnsafeVector testDataA
+         inputB  = map reallyUnsafeVector testDataB
+         outSim = simZipWithVSys inputA inputB
+     outVHDL <- vhdlTest (Just 100) zipWithVSys inputA inputB
+     outSim @=? outVHDL 
+
+foldlVOpTest :: Test
+foldlVOpTest = "foldlVOpTest" ~: TestCase ioTest
+ where 
+   int32Range = (-2147483647,2147483647):: (Int32, Int32)
+   ioTest = do
+     testData <- generate.(vectorOf 100).(vectorOf 4).choose $ int32Range
+     let input  = map reallyUnsafeVector testData
+         outSim = simFoldingAdderOp input
+     outVHDL <- vhdlTest (Just 100) foldingAdderOpSys input
+     outSim @=? outVHDL 
+
+zipWithVOpTest :: Test
+zipWithVOpTest = "zipWithVOpTest" ~: TestCase ioTest
+ where
+   int32Range = (-2147483647,2147483647):: (Int32, Int32)
+   ioTest = do
+     testDataA <- generate.(vectorOf 100).(vectorOf 4).choose $ int32Range
+     testDataB <- generate.(vectorOf 100).(vectorOf 4).choose $ int32Range
+     let inputA  = map reallyUnsafeVector testDataA
+         inputB  = map reallyUnsafeVector testDataB
+         outSim = simZipWithVOpSys inputA inputB
+     outVHDL <- vhdlTest (Just 100) zipWithVOpSys inputA inputB
+     outSim @=? outVHDL 
+     
+
+mapVectorOperatorSectionTest :: Test
+mapVectorOperatorSectionTest = "mapVectorOperatorSectionTest" ~: outSim <~=?> outVHDL
+ where 
+   outSim = take 100 simVecOpSecCounter
+   outVHDL = vhdlTest (Just 100) vecOpSecCounterSys
+
+mapLambdaVectorTest :: Test
+mapLambdaVectorTest = "mapLambdaVectorTest" ~: outSim <~=?> outVHDL
+ where 
+   outSim = take 100 simLamVecCounter
+   outVHDL = vhdlTest (Just 100) vecLamCounterSys
+
+mapVectorTransformationTest :: Test
+mapVectorTransformationTest = "mapVectorTransformationTest" ~: outSim <~=?> outVHDL
+ where 
+   outSim = take 100 simTransfVecCounter
+   outVHDL = vhdlTest (Just 100) transfVecCounterSys
+
 -------------------
 -- Helper functions
 -------------------
@@ -159,7 +251,8 @@ lfsrTest = "lsfrTest" ~: outSim <~=?> outVHDL
 
 -- run a vhdl testbench with custom backend options
 vhdlTest :: SysFunToIOSimFun sysF simF => Maybe Int -> SysDef sysF -> simF
-vhdlTest = writeAndModelsimVHDLOps testVHDLOps
+-- vhdlTest = writeAndModelsimVHDLOps testVHDLOps
+vhdlTest = writeAndGhdlVHDL
 
 -- testing VHDL options
 testVHDLOps :: VHDLOps

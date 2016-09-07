@@ -116,6 +116,8 @@ data ForSyDeErr =
   UnsupportedProc                            |
   -- | Quartus Failed
   QuartusFailed                              |
+  -- | Ghdl Failed
+  GhdlFailed                                 |
   -- | Modelsim Failed
   ModelsimFailed                             |
 
@@ -290,6 +292,7 @@ instance Show ForSyDeErr where
  show (UntranslatableVHDLExp exp err) = 
     "Untranslatable expression `" ++ pprint exp ++ "': " ++ show err     
  show QuartusFailed = "Quartus failed"
+ show GhdlFailed = "Ghdl failed"
  show ModelsimFailed = "Modelsim failed"
  show (Other str) = str 
 

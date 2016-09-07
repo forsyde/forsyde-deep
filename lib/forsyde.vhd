@@ -111,7 +111,7 @@ package body types is
     variable inter : signed (0 to 7) := to_signed (i, 8);
     variable ret : fsvec_std_logic (0 to 7); 
   begin
-    for index in 0 to ret'length-1 loop
+    for index in ret'range loop
       ret(index) := inter(index);
     end loop;
     return ret;
@@ -122,7 +122,7 @@ package body types is
     variable inter : signed (0 to 15) := to_signed (i, 16);
     variable ret : fsvec_std_logic (0 to 15); 
   begin
-    for index in 0 to ret'length-1 loop
+    for index in ret'range loop
       ret(index) := inter(index);
     end loop;
     return ret;
@@ -133,7 +133,7 @@ package body types is
     variable inter : signed (0 to 31) := to_signed (i, 32);
     variable ret : fsvec_std_logic (0 to 31); 
   begin
-    for index in 0 to ret'length-1 loop
+    for index in ret'range loop
       ret(index) := inter(index);
     end loop;
     return ret;
@@ -143,7 +143,7 @@ package body types is
   function fromBitVector8 (v : fsvec_std_logic) return int8 is
     variable inter : signed (0 to 7);
   begin
-    for index in 0 to inter'length-1 loop
+    for index in inter'range loop
       inter(index) := v(index);
     end loop;
     return to_integer(inter);
@@ -152,7 +152,7 @@ package body types is
   function fromBitVector16 (v : fsvec_std_logic) return int16 is
     variable inter : signed (0 to 15);
   begin
-    for index in 0 to inter'length-1 loop
+    for index in inter'range loop
       inter(index) := v(index);
     end loop;
     return to_integer(inter);
@@ -162,7 +162,7 @@ package body types is
   function fromBitVector32 (v : fsvec_std_logic) return int32 is
     variable inter : signed (0 to 31);
   begin
-    for index in 0 to inter'length-1 loop
+    for index in inter'range loop
       inter(index) := v(index);
     end loop;
     return to_integer(inter);

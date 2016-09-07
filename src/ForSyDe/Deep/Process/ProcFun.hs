@@ -26,6 +26,7 @@ module ForSyDe.Deep.Process.ProcFun
 ) where
 
 import ForSyDe.Deep.Process.ProcType
+import ForSyDe.Deep.Process.Desugar (desugarTransform)
 import ForSyDe.Deep.Process.ProcVal (ProcValAST, mkProcValAST)
 import ForSyDe.Deep.ForSyDeErr
 
@@ -87,7 +88,8 @@ defArgPF pf v = pf{ ast = astPF {pars = ((pars astPF) ++ [FunAST (ast v)])},
 -- @
 newProcFun :: Q [Dec] -> ExpQ
 newProcFun fDecQs = do 
-      fDecs <- fDecQs   
+      fDecsRaw <- fDecQs   
+      fDecs <- desugarTransform fDecsRaw
       -- Check for the declarations to be correct
       (name, cls) <- recover (currErr $ IncorrProcFunDecs fDecs) 
                              (checkDecs fDecs)

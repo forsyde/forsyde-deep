@@ -6,6 +6,11 @@ DEPENDENCIES
  It depends on the type-level and parameterized-data packages and some
  others normally bundled with GHC distributions.
 
+ For synthesis and simulation of the generated VHDL the Altera toolchain is
+ supported. Quartus and Modelsim need to be on the PATH for these features to
+ work.  Additionally the open-source VHDL simulator Ghdl is supported from
+ version ghdl-0.33 onwards.
+
 INSTALLATION
 
 See http://www.haskell.org/haskellwiki/Cabal/How_to_install_a_Cabal_package
