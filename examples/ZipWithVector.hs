@@ -23,3 +23,14 @@ zipWithVSys = newSysDef zipWithV "zipWithV" ["a", "b"] ["countVal"]
 
 simZipWithVSys :: [(V.FSVec D4 Int32)] -> [(V.FSVec D4 Int32)] -> [(V.FSVec D4 Int32)]
 simZipWithVSys = simulate zipWithVSys
+
+compileQuartus :: IO ()
+compileQuartus = writeVHDLOps vhdlOps zipWithVSys
+ where vhdlOps = defaultVHDLOps{execQuartus=Just quartusOps}
+       quartusOps = QuartusOps{action=FullCompilation,
+                               fMax=Just 50, -- in MHz
+                               fpgaFamiliyDevice=Just ("CycloneII",
+                                                       Just "EP2C35F672C6"),
+                               -- Possibility for Pin Assignments
+                               pinAssigs=[]
+                              }
