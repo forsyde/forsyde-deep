@@ -1,0 +1,10 @@
+resolver: ghc-8.0.2
+
+extra-deps:
+- mtl-2.2.2
+- parameterized-data-0.1.6
+- random-1.1
+- regex-posix-0.95.2
+- syb-0.7
+- type-level-0.3.0
+- regex-base-0.93.2
