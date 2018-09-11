@@ -22,8 +22,7 @@ tested-with:    GHC==7.10.3 GHC==8.0.1
 data-files:     lib/forsyde.vhd
 -- In order to include all this files with sdist
 extra-source-files: LICENSE,
-                    README,
-                    INSTALL,
+                    README.md,
                     examples/ALU.hs,
                     examples/ALU_Shallow.hs,
                     examples/BitVector.hs,

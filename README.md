@@ -18,10 +18,6 @@ DESCRIPTION
 
 INSTALLATION
 ------------
-
- For information on how to install ForSyDe see the INSTALL file.
-
-### Dependencies
  
 ForSyDe depends on GHC vesions 7.10.3 or 8.0.1 due to the use of
 numerous extensions, namely Template Haskell (TH).
@@ -36,15 +32,13 @@ supported. Quartus and Modelsim need to be on the PATH for these features to
 work.  Additionally the open-source VHDL simulator Ghdl is supported from
 version ghdl-0.33 onwards.
 
-### Installation
-
 This package can be installed with:
 
 * Cabal, provided you have installed the right version of GHC and its
   dependent `cabal-install` package using the commands:
 
-        cabal install # --with-ghc=path_or_symlink/to/ghc-version # installs forsyde-deep
-		cabal haddock                                             # generates documentation. Needs Haddock > 2.0
+        cabal install # --with-ghc=path/to/ghc-version # installs forsyde-deep
+		cabal haddock                                  # generates documentation. Needs Haddock > 2.0
 		
 * Stack, which takes care of all dependencies and installs everything
   (including the compiler) in a sandboxed environment:
