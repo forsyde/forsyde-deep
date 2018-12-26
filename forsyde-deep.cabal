@@ -1,20 +1,20 @@
-name:           ForSyDe-Deep
+name:           forsyde-deep
 version:        0.2.0
 cabal-version:  >= 1.9.2
 build-type:     Custom
 license:        BSD3
 license-file:   LICENSE
-author:         ES group, KTH/ICT/ES
-copyright:      Copyright (c) 2003-2013 SAM group, KTH/ICT/ES
-maintainer:     forsyde-dev@ict.kth.se
-homepage:       http://forsyde.ict.kth.se/
+author:         Alfonso Acosta, Hendrik Woidt
+copyright:      Copyright (c) 2003-2018 ForSyDe Group, KTH/EECS/ES
+maintainer:     forsyde-dev@eecs.kth.se
+homepage:       https://forsyde.github.io/
 stability:      alpha
 synopsis:
  ForSyDe's Haskell-embedded Domain Specific Language.
 description:
  The ForSyDe (Formal System Design) methodology has been developed with the objective to move system design to a higher level of abstraction and to bridge the abstraction gap by transformational design refinement.
 
- This library provides ForSyDe's implementation as a Haskell-embedded Domain Specific Language (DSL). For more information, please see ForSyDe's website: <http://www.ict.kth.se/forsyde/>.
+ This library provides ForSyDe's implementation as a Haskell-embedded Domain Specific Language (DSL). For more information, please see ForSyDe's website: <https://forsyde.github.io/>.
 
  This library provides the deep implementation of ForSyDe in Haskell.
 category:       Language, Hardware
@@ -54,10 +54,10 @@ Test-Suite examples
   main-is:    Main.hs
   hs-source-dirs:  tests/examples,
                    examples/
-  build-depends:   base>=4 && <6,
+  build-depends:   base>= 4.8.2 && < 4.9.2,
                    parameterized-data >= 0.1.5,
                    type-level,
-                   ForSyDe-Deep,
+                   forsyde-deep,
                    HUnit,
                    random,
                    syb,
@@ -68,7 +68,7 @@ Library
   build-depends:   type-level,
                    parameterized-data >= 0.1.5,
                    containers,
-                   base>=4 && <6,
+                   base>= 4.8.2 && < 4.9.2,
                    regex-posix,
                    mtl,
                    syb,
@@ -98,7 +98,7 @@ Library
                    ForSyDe.Deep.Backend.VHDL,
                    ForSyDe.Deep.Backend.GraphML
 
-  other-modules:   Paths_ForSyDe_Deep,
+  other-modules:   Paths_forsyde_deep,
                    Language.Haskell.TH.TypeLib,
                    Data.Typeable.TypeRepLib,
                    Data.Typeable.FSDTypeRepLib,
@@ -144,6 +144,25 @@ Library
   if flag(developer)
         cpp-options: -DDEVELOPER
 
+custom-setup
+  setup-depends: base  >=4.8.2 && <4.9.2,
+                 Cabal >= 1.22 && < 1.25,
+                 parameterized-data >= 0.1.5,
+                 containers,
+                 base>= 4.8.2 && < 4.9.2,
+                 regex-posix,
+                 mtl,
+                 syb,
+                 pretty,
+                 template-haskell,
+                 process,
+                 directory,
+                 filepath,
+                 random,
+                 type-level,
+                 HUnit,
+                 QuickCheck
+        
 source-repository head
         type:     git
         location: git://github.com/forsyde/forsyde-deep.git

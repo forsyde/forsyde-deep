@@ -14,9 +14,9 @@
 -----------------------------------------------------------------------------
 module ForSyDe.Deep.Config (forsydeVersion,
                             maxTupleSize,
-                            module Paths_ForSyDe_Deep) where
+                            module Paths_forsyde_deep) where
 
-import Paths_ForSyDe_Deep
+import Paths_forsyde_deep
 import ForSyDe.Deep.Version (getVersion)
 
 #ifdef DEVELOPER

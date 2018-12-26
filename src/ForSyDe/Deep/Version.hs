@@ -14,7 +14,7 @@
 
 module ForSyDe.Deep.Version (getVersion) where
 
-import Paths_ForSyDe_Deep (version)
+import Paths_forsyde_deep (version)
 import Data.Version (showVersion)
 
 import Language.Haskell.TH (runIO)
