@@ -39,8 +39,8 @@ script:
  - cabal check
  - cabal sdist   # tests that a source-distribution can be generated
  - cabal test
- - echo "Test log" dist/test/ForSyDe-Deep*-examples.log
- - cat dist/test/ForSyDe-Deep*-examples.log
+ - echo "Test log" dist/test/forsyde-deep*-examples.log
+ - cat dist/test/forsyde-deep*-examples.log
 # Check that the resulting source distribution can be built & installed.
 # If there are no other `.tar.gz` files in `dist`, this can be even simpler:
 # `cabal install --force-reinstalls dist/*-*.tar.gz`
