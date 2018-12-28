@@ -16,7 +16,7 @@ foldingAdder  = mapSY "counterSource" add1
                                add1v v = foldladd1 0 v
                                  where
                                      add1 :: Int32 -> Int32 -> Int32
-                                     add1 a b = a+b+1 
+                                     add1 a b = a+b
                                      -- The higher order vector functions can only be
                                      -- translated directly when they are the sole
                                      -- expression of a function body:
