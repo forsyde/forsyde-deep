@@ -14,17 +14,21 @@ foldingAdder :: Signal (V.FSVec D4 Int32) -> Signal Int32
 foldingAdder  = mapSY "counterSource" add1
  where add1 = $(newProcFun [d| add1v :: (V.FSVec D4 Int32) -> Int32
                                add1v v = foldladd1 0 v
-                                 where
-                                     add1 :: Int32 -> Int32 -> Int32
-                                     add1 a b = a+b+1 
+                                 where 
                                      -- The higher order vector functions can only be
                                      -- translated directly when they are the sole
                                      -- expression of a function body:
                                      foldladd1 :: Int32 -> (V.FSVec D4 Int32) -> Int32
-                                     foldladd1 init v = V.foldl add1 init v |])
+                                     foldladd1 init v = V.foldl (+) init v |])
 
 foldingAdderSys :: SysDef ((Signal (V.FSVec D4 Int32)) -> Signal Int32)
 foldingAdderSys = newSysDef foldingAdder "foldingAdder" ["input"] ["countVal"]
 
 simFoldingAdder :: [(V.FSVec D4 Int32)] -> [Int32]
 simFoldingAdder = simulate foldingAdderSys 
+
+vhdlFoldingAdder :: IO ()
+vhdlFoldingAdder = writeVHDL foldingAdderSys
+
+graphmlFoldingAdder :: IO ()
+graphmlFoldingAdder = writeGraphML foldingAdderSys
