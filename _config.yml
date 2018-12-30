@@ -2,6 +2,7 @@ name: ForSyDe-Deep
 description: A Deep-Embedded Synthesizer for ForSyDe Models
 remote_theme: ugeorge/forsyde-web-theme
 
+url: https://forsyde.github.io/forsyde-deep
 parent-url: https://forsyde.github.io
 
 maintainer:
