@@ -18,8 +18,9 @@ description:
 
  This library provides the deep implementation of ForSyDe in Haskell.
 category:       Language, Hardware
-tested-with:    GHC==7.10.3 GHC==8.0.1
+tested-with:    GHC==8.6.5
 data-files:     lib/forsyde.vhd
+cabal-version:  2.0
 -- In order to include all this files with sdist
 extra-source-files: LICENSE,
                     README.md,
@@ -54,7 +55,7 @@ Test-Suite examples
   main-is:    Main.hs
   hs-source-dirs:  tests/examples,
                    examples/
-  build-depends:   base>= 4.8.2 && < 4.9.2,
+  build-depends:   base ^>= 4.12,
                    parameterized-data >= 0.1.5,
                    type-level,
                    forsyde-deep,
@@ -68,7 +69,7 @@ Library
   build-depends:   type-level,
                    parameterized-data >= 0.1.5,
                    containers,
-                   base>= 4.8.2 && < 4.9.2,
+                   base ^>= 4.12,
                    regex-posix,
                    mtl,
                    syb,
@@ -145,11 +146,10 @@ Library
         cpp-options: -DDEVELOPER
 
 custom-setup
-  setup-depends: base  >=4.8.2 && <4.9.2,
-                 Cabal >= 1.22 && < 1.25,
+  setup-depends: base ^>= 4.12,
+                 Cabal ^>= 2.4,
                  parameterized-data >= 0.1.5,
                  containers,
-                 base>= 4.8.2 && < 4.9.2,
                  regex-posix,
                  mtl,
                  syb,

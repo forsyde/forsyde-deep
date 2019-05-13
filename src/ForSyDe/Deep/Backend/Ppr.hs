@@ -15,6 +15,7 @@
 module ForSyDe.Deep.Backend.Ppr where
 
 import Text.PrettyPrint.HughesPJ
+import Prelude hiding ((<>))
 
 -- | Pretty printing class
 class Ppr a where

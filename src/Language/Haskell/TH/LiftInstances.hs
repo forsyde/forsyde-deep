@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell,CPP #-}  
+{-# LANGUAGE TemplateHaskell,CPP, DeriveLift #-}  
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Language.Haskell.TH.LiftInstances
@@ -49,12 +49,16 @@ import Language.Haskell.TH.Syntax
   Range, 
   Clause, 
   Type, 
-  Dec, 
+  Dec(..), 
   Exp,
   Q,
   Lift(..),
   TyVarBndr,
+#if __GLASGOW_HASKELL__ < 804
   FamFlavour,
+-- #else
+--   OpenTypeFamilyD,
+#endif
   Pragma,
   AnnLookup,
   AnnTarget,
@@ -68,8 +72,19 @@ import Language.Haskell.TH.Syntax
   RuleBndr,
   RuleMatch,
   TyLit,
-  TySynEqn
+  TySynEqn,
+---------------------------
+  DerivClause(..),
+  DerivStrategy(..),
+  PatSynArgs(..),
+  PatSynDir(..)
   )
+
+-- instance Lift DerivClause where lift = pure
+-- instance Lift DerivStrategy where lift = pure
+-- instance Lift PatSynArgs where lift = pure
+-- instance Lift PatSynDir where lift = pure
+
 
 $(mapM deriveLift 
       [''Guard,
@@ -104,7 +119,11 @@ $(mapM deriveLift
        ''Dec, 
        ''Exp,
        ''TyVarBndr,
+#if __GLASGOW_HASKELL__ < 804
        ''FamFlavour,
+-- #else
+--        ''DataFamilyD,
+#endif
        ''Pragma,
 
        ''AnnLookup,
@@ -119,11 +138,15 @@ $(mapM deriveLift
        ''RuleBndr,
        ''RuleMatch,
        ''TyLit,
-       ''TySynEqn
+       ''TySynEqn,
+---------------------------------
+       ''DerivClause,
+       ''DerivStrategy,
+       ''PatSynArgs,
+       ''PatSynDir
        ])
        
 -- | lift twice, getting the meta AST (the AST of the AST)
 metaLift :: Lift a => a -> Q Exp
 metaLift exp = do expAST <- lift exp
                   lift expAST
-
