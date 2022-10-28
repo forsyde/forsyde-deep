@@ -363,7 +363,7 @@ genUnconsVectorFuns elemTM vectorTM  =
                 Nothing
        -- res := vec(0 to n-1)
        takeExpr = NSimple resId :=
-                    (vecSlice (PrimLit "1")
+                    (vecSlice (PrimLit "0")
                               (PrimName (NSimple $ nPar) :-: PrimLit "1"))
        takeRet =  ReturnSm (Just $ PrimName $ NSimple resId)
        dropSpec = Function dropId [IfaceVarDec nPar   naturalTM,
