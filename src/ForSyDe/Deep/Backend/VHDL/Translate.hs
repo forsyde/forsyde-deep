@@ -369,7 +369,8 @@ doCustomTR2TM rep | isFSVec = do
  -- Translate the type of the elements contained in the vector
  valTM <- transTR2TM valueType
  -- Build the unconstrained vector identifier
- let vectorId = unsafeVHDLContainerId [valTM] ("fsvec_"++ fromVHDLId valTM)
+-- let vectorId = unsafeVHDLContainerId [valTM] ("fsvec_"++ fromVHDLId valTM)
+ let vectorId = unsafeVHDLContainerId [valTM] ("fsvec_ISSUE_41_vectorId_"++ fromVHDLId valTM)
  -- Obtain the unconstrained vector together with its functions and add them
  -- to the global traversing-results (if this wasn't previously done):
  --  * Check if the unconstrained array was previously translated
@@ -389,7 +390,8 @@ doCustomTR2TM rep | isFSVec = do
       addUnconsFSVec $ valueType
 
  -- Create the vector subtype identifier
- let subvectorId = unsafeVHDLBasicId ("fsvec_" ++ show size ++ "_" ++
+ let subvectorId = unsafeVHDLBasicId ("fsvec_ISSUE_41_subvectorId_" ++ show size ++ "_" ++
+ --let subvectorId = unsafeVHDLBasicId ("fsvec_" ++ show size ++ "_" ++
                                      fromVHDLId valTM)
  -- Create the vector subtype declaration
  return $ Right $
